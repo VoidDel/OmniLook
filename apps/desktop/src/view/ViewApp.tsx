@@ -97,9 +97,13 @@ export function ViewApp() {
             <span>{formatSize(shown.size)}</span>
             <span>{formatDate(shown.modified, i18n.language)}</span>
             {meta && <span>{meta}</span>}
-            <span className="grow ellipsis" title={shown.path}>
-              {shown.path}
-            </span>
+            {/* A caller's title (OmniZip: "archive › path") stands for a file in its cache,
+                whose path means nothing to the reader. */}
+            {!shown.title && (
+              <span className="grow ellipsis" title={shown.path}>
+                {shown.path}
+              </span>
+            )}
           </>
         )}
       </footer>

@@ -59,7 +59,8 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
     let mut i = 0;
     while i < args.len() {
         let a = args[i].to_string_lossy();
-        if a == "--title" {
+        // Flags with a value (`--source` names the caller; accepted, not used yet).
+        if a == "--title" || a == "--source" {
             i += 2;
             continue;
         }
@@ -117,6 +118,13 @@ mod tests {
                 anchor: Some(1234),
                 gpu: true
             })
+        );
+        assert_eq!(
+            p(&["preview", "C:\\a.txt", "--source", "omnizip"]),
+            Mode::Preview {
+                path: PathBuf::from("C:\\a.txt"),
+                title: None
+            }
         );
         assert!(matches!(p(&["preview"]), Mode::Usage(_)));
         assert!(matches!(p(&["a", "b"]), Mode::Usage(_)));
