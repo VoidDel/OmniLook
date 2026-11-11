@@ -67,5 +67,15 @@
     "sheets": "{count} 个工作表",
     "slides": "{count} 张幻灯片",
     "emptySlide": "（没有文字）"
+  },
+  "font": {
+    "glyphs": "{count} 个字形",
+    "monospace": "等宽",
+    "failed": "无法载入这个字体",
+    "typeHere": "输入文字预览…",
+    "sampleLatin": "The quick brown fox jumps over the lazy dog.",
+    "sampleCjk": "天地玄黄，宇宙洪荒。",
+    "sampleKana": "いろはにほへと",
+    "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
   }
 }

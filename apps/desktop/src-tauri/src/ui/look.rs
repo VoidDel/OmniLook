@@ -149,6 +149,10 @@ pub fn mime(path: &Path) -> &'static str {
         "opus" => "audio/opus",
         "m4a" => "audio/mp4",
         "aac" => "audio/aac",
+        "ttf" => "font/ttf",
+        "otf" => "font/otf",
+        "woff" => "font/woff",
+        "woff2" => "font/woff2",
         _ => "application/octet-stream",
     }
 }

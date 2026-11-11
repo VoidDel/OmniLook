@@ -21,7 +21,7 @@
         "img-src": "'self' data: blob: http://look.localhost",
         "media-src": "http://look.localhost",
         "frame-src": "http://look.localhost",
-        "font-src": "'self' data:",
+        "font-src": "'self' data: http://look.localhost",
         "connect-src": "ipc: http://ipc.localhost http://look.localhost"
       },
       "freezePrototype": true

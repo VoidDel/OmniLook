@@ -67,5 +67,15 @@
     "sheets": "{count, plural, one {# sheet} other {# sheets}}",
     "slides": "{count, plural, one {# slide} other {# slides}}",
     "emptySlide": "(no text)"
+  },
+  "font": {
+    "glyphs": "{count, plural, one {# glyph} other {# glyphs}}",
+    "monospace": "Monospaced",
+    "failed": "This font could not be loaded",
+    "typeHere": "Type to preview…",
+    "sampleLatin": "The quick brown fox jumps over the lazy dog.",
+    "sampleCjk": "天地玄黄，宇宙洪荒。",
+    "sampleKana": "いろはにほへと",
+    "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
   }
 }

@@ -23,6 +23,8 @@ pub enum Kind {
     Handler,
     /// Word, Excel or PowerPoint read without Office (`office`), when no handler shows it.
     Office,
+    /// TrueType, OpenType, WOFF: samples drawn with the font (`font`).
+    Font,
     Binary,
 }
 
@@ -165,7 +167,7 @@ const ARCHIVE: &[&str] = &[
 ];
 const HANDLER: &[&str] = &[
     "doc", "docx", "docm", "dot", "dotx", "rtf", "xls", "xlsx", "xlsm", "xlsb", "ppt", "pptx",
-    "pptm", "pps", "ppsx", "vsd", "vsdx", "msg", "eml", "ttf", "otf", "ttc", "fon",
+    "pptm", "pps", "ppsx", "vsd", "vsdx", "msg", "eml", "ttc", "fon",
 ];
 
 fn ext_of(path: &Path) -> String {
@@ -238,6 +240,8 @@ pub fn detect(path: &Path) -> Kind {
         Some(Kind::Audio)
     } else if ARCHIVE.contains(&e) {
         Some(Kind::Archive)
+    } else if matches!(e, "ttf" | "otf" | "woff" | "woff2") {
+        Some(Kind::Font)
     } else if HANDLER.contains(&e) {
         Some(Kind::Handler)
     } else {

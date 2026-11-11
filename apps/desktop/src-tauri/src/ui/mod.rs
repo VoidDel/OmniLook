@@ -14,7 +14,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use omnilook_core::{Kind, archive, audio, detect, folder, hex, markdown, office, text};
+use omnilook_core::{Kind, archive, audio, detect, folder, font, hex, markdown, office, text};
 use omnilook_win::{events::window_rect, handler, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -387,6 +387,17 @@ fn handlers(path: &std::path::Path) -> bool {
     handler::available(path)
 }
 
+/// What a font file says about itself, names in the UI language where it has them.
+#[tauri::command]
+async fn read_font(
+    id: u64,
+    locale: String,
+    state: tauri::State<'_, ViewState>,
+) -> Result<font::FontInfo, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || Ok(font::read(&path, &locale))).await
+}
+
 /// Word, Excel or PowerPoint text without Office (`office::read`).
 #[tauri::command]
 async fn read_office(
@@ -561,6 +572,7 @@ fn run(role: Role) -> ExitCode {
             read_markdown,
             read_audio,
             read_office,
+            read_font,
             host_show,
             host_area,
             host_unload,

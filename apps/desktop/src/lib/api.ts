@@ -2,7 +2,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
-export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'binary';
+export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'font' | 'binary';
 
 /** The file a preview shows. */
 export interface Shown {
@@ -70,6 +70,21 @@ export interface HostArea {
   y: number;
   w: number;
   h: number;
+}
+
+/** A font's names and the scripts it covers (crates/omnilook-core/src/font.rs). */
+export interface FontInfo {
+  family: string | null;
+  familyEn: string | null;
+  style: string | null;
+  version: string | null;
+  designer: string | null;
+  glyphs: number | null;
+  monospace: boolean;
+  latin: boolean;
+  cjk: boolean;
+  kana: boolean;
+  hangul: boolean;
 }
 
 /** Word / Excel / PowerPoint text without Office (crates/omnilook-core/src/office.rs). */
@@ -144,6 +159,7 @@ export const api = {
   /** Flat [start, length, class] triples in UTF-16 units. */
   highlight: (id: number) => invoke<number[]>('highlight', { id }),
   readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
+  readFont: (id: number, locale: string) => invoke<FontInfo>('read_font', { id, locale }),
   readOffice: (id: number) => invoke<OfficePreview>('read_office', { id }),
   readAudio: (id: number) => invoke<AudioInfo>('read_audio', { id }),
   /** A system preview handler over the page's area (window pixels); colours as 0x00BBGGRR. */

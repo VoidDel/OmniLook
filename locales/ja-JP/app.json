@@ -67,5 +67,15 @@
     "sheets": "{count} シート",
     "slides": "{count} スライド",
     "emptySlide": "（テキストなし）"
+  },
+  "font": {
+    "glyphs": "{count} グリフ",
+    "monospace": "等幅",
+    "failed": "このフォントを読み込めませんでした",
+    "typeHere": "文字を入力してプレビュー…",
+    "sampleLatin": "The quick brown fox jumps over the lazy dog.",
+    "sampleCjk": "天地玄黄、宇宙洪荒。",
+    "sampleKana": "いろはにほへと ちりぬるを",
+    "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
   }
 }

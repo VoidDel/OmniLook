@@ -4,6 +4,7 @@
 pub mod archive;
 pub mod audio;
 pub mod folder;
+pub mod font;
 pub mod hex;
 pub mod image;
 pub mod kind;
