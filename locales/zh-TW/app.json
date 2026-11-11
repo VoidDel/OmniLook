@@ -17,7 +17,11 @@
     "stereo": "立體聲",
     "channels": "{count} 聲道",
     "cannotPlay": "預覽中無法播放這種格式",
-    "playFailed": "無法播放這個檔案"
+    "playFailed": "無法播放這個檔案",
+    "handler": "系統預覽程式",
+    "noHandler": "系統中沒有這種檔案的預覽程式",
+    "handlerFailed": "預覽程式無法顯示這個檔案",
+    "handlerTimeout": "預覽程式沒有回應"
   },
   "settings": {
     "title": "Omni Look 設定",

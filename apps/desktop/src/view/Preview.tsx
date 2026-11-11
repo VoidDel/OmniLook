@@ -9,6 +9,7 @@ import { api, type HexPreview, type Shown } from '../lib/api';
 import { formatSize } from '../lib/format';
 import { ArchiveView } from './ArchiveView';
 import { FolderView } from './FolderView';
+import { HandlerView } from './HandlerView';
 import { MarkdownView } from './MarkdownView';
 import { MediaView } from './MediaView';
 import { TextView } from './TextView';
@@ -82,6 +83,8 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
       return <ArchiveView shown={shown} onMeta={onMeta} />;
     case 'folder':
       return <FolderView shown={shown} onMeta={onMeta} />;
+    case 'handler':
+      return <HandlerView shown={shown} onMeta={onMeta} />;
     case 'binary':
       return <HexView shown={shown} onMeta={onMeta} />;
     default:

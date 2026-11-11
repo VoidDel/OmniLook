@@ -15,7 +15,7 @@ use std::{
 };
 
 use omnilook_core::{Kind, archive, audio, detect, folder, hex, markdown, text};
-use omnilook_win::{events::window_rect, pipe};
+use omnilook_win::{events::window_rect, handler, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use windows::Win32::{
@@ -65,6 +65,8 @@ pub struct ViewState {
     placed: AtomicBool,
     /// This process's pipe, for the agent.
     pipe: String,
+    /// The thread running system preview handlers, started on first use.
+    host: Mutex<Option<Arc<handler::Host>>>,
 }
 
 impl ViewState {
@@ -92,7 +94,7 @@ impl ViewState {
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| path.to_string_lossy().into_owned()),
             title,
-            kind: detect(&path),
+            kind: view_kind(&path),
             playable: audio::playable(&path),
             size: meta.as_ref().map(|m| m.len()).unwrap_or(0),
             modified: meta
@@ -109,6 +111,46 @@ impl ViewState {
             });
         }
         shown
+    }
+
+    /// The handler thread, started on first use; keys a handler passes back reach the page as
+    /// `host-key` events.
+    fn host(&self, app: &AppHandle) -> Result<Arc<handler::Host>, String> {
+        let mut h = self.host.lock().map_err(|e| e.to_string())?;
+        if let Some(h) = h.as_ref() {
+            return Ok(h.clone());
+        }
+        let app = app.clone();
+        let host = handler::Host::start(move |k| {
+            let name = match (k.vk, k.ctrl) {
+                (0x1B, _) => "Escape",
+                (0x20, true) => "CtrlSpace",
+                (0x25, false) => "ArrowLeft",
+                (0x27, false) => "ArrowRight",
+                _ => return false,
+            };
+            let _ = app.emit_to("view", "host-key", name);
+            true
+        })
+        .map(Arc::new)
+        .map_err(|e| e.to_string())?;
+        *h = Some(host.clone());
+        Ok(host)
+    }
+
+    /// A handler that did not answer leaves its thread stuck: the next file gets a new one.
+    fn drop_host(&self) {
+        if let Ok(mut h) = self.host.lock() {
+            h.take();
+        }
+    }
+
+    /// The window is closing: let the handler go first.
+    fn close_host(&self) {
+        let host = self.host.lock().ok().and_then(|mut h| h.take());
+        if let Some(h) = host {
+            h.unload_and_wait(Duration::from_millis(800));
+        }
     }
 
     fn shown(&self) -> Option<Shown> {
@@ -225,7 +267,8 @@ fn view_show(app: AppHandle, state: tauri::State<'_, ViewState>) {
 }
 
 #[tauri::command]
-fn view_close(app: AppHandle) {
+fn view_close(app: AppHandle, state: tauri::State<'_, ViewState>) {
+    state.close_host();
     let _ = client::send(
         &Request::ViewClosed {
             pid: std::process::id(),
@@ -323,6 +366,62 @@ async fn read_audio(
     blocking(move || Ok(audio::read(&path))).await
 }
 
+/// The kind of preview, with the system's preview handlers: a type no built-in previewer reads
+/// goes to its handler when the system has one (fonts, Outlook items, CAD viewers…). A type listed
+/// for handlers that has none here (Word files without Office) gets the file card from the page.
+fn view_kind(path: &std::path::Path) -> Kind {
+    match detect(path) {
+        Kind::Binary if handler::available(path) => Kind::Handler,
+        k => k,
+    }
+}
+
+/// Shows the file with its system preview handler over the page's area (`x`, `y`, `w`, `h` in
+/// window pixels), in the page's colours (`0x00BBGGRR`). Waits up to 10 s: a handler that does
+/// not answer by then is given up on.
+#[allow(clippy::too_many_arguments)]
+#[tauri::command]
+async fn host_show(
+    app: AppHandle,
+    id: u64,
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
+    bg: Option<u32>,
+    fg: Option<u32>,
+    state: tauri::State<'_, ViewState>,
+) -> Result<String, String> {
+    let path = path_of(&state, id)?;
+    let parent = app
+        .get_webview_window("view")
+        .and_then(|w| w.hwnd().ok())
+        .map(|h| h.0 as isize)
+        .ok_or("no window")?;
+    let host = state.host(&app)?;
+    let area = handler::Area { x, y, w, h };
+    let r =
+        blocking(move || host.show(parent, &path, area, bg.zip(fg), Duration::from_secs(10))).await;
+    if matches!(&r, Err(e) if e == "timeout") {
+        state.drop_host();
+    }
+    r
+}
+
+#[tauri::command]
+fn host_area(x: i32, y: i32, w: i32, h: i32, state: tauri::State<'_, ViewState>) {
+    if let Some(host) = state.host.lock().ok().and_then(|h| h.clone()) {
+        host.set_area(handler::Area { x, y, w, h });
+    }
+}
+
+#[tauri::command]
+fn host_unload(state: tauri::State<'_, ViewState>) {
+    if let Some(host) = state.host.lock().ok().and_then(|h| h.clone()) {
+        host.unload();
+    }
+}
+
 /// A link clicked in a preview: web and mail addresses only.
 #[tauri::command]
 fn open_url(url: String) -> bool {
@@ -395,6 +494,7 @@ fn run(role: Role) -> ExitCode {
             anchor: args.anchor,
             placed: AtomicBool::new(false),
             pipe: pipe_name,
+            host: Mutex::new(None),
         };
         state.set(args.path.clone(), args.title.clone());
         builder = builder
@@ -405,6 +505,14 @@ fn run(role: Role) -> ExitCode {
     }
     let result = builder
         .on_window_event(|window, event| match event {
+            // A system preview handler's window lies over the page in a popup: it follows.
+            tauri::WindowEvent::Moved(_) if window.label() == "view" => {
+                if let Some(state) = window.try_state::<ViewState>()
+                    && let Some(host) = state.host.lock().ok().and_then(|h| h.clone())
+                {
+                    host.follow_window();
+                }
+            }
             // Moved to a display with another scale: icons for the new DPI.
             tauri::WindowEvent::ScaleFactorChanged { .. } => {
                 if let Ok(h) = window.hwnd() {
@@ -431,6 +539,9 @@ fn run(role: Role) -> ExitCode {
             read_archive,
             read_markdown,
             read_audio,
+            host_show,
+            host_area,
+            host_unload,
             open_url,
             get_settings,
             save_settings,
@@ -506,8 +617,9 @@ fn serve_view_pipe(app: AppHandle) {
             }
             Ok(ViewCommand::Close) => {
                 let app = app.clone();
-                // Answer before going.
+                // Answer before going (the agent waits a second at most); the handler goes first.
                 std::thread::spawn(move || {
+                    app.state::<ViewState>().close_host();
                     std::thread::sleep(Duration::from_millis(30));
                     app.exit(0);
                 });

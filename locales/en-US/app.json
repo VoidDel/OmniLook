@@ -17,7 +17,11 @@
     "stereo": "Stereo",
     "channels": "{count} channels",
     "cannotPlay": "This format cannot be played in the preview",
-    "playFailed": "This file could not be played"
+    "playFailed": "This file could not be played",
+    "handler": "System preview handler",
+    "noHandler": "No preview handler is installed for this type",
+    "handlerFailed": "The preview handler could not show this file",
+    "handlerTimeout": "The preview handler did not respond"
   },
   "settings": {
     "title": "Omni Look Settings",

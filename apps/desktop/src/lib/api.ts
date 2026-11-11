@@ -64,6 +64,14 @@ export interface TextPreview {
   language: string | null;
 }
 
+/** Where a system preview handler draws, in window pixels. */
+export interface HostArea {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 /** Markdown rendered in Rust and cleaned there (crates/omnilook-core/src/markdown.rs). */
 export interface MarkdownPreview {
   html: string;
@@ -120,6 +128,10 @@ export const api = {
   highlight: (id: number) => invoke<number[]>('highlight', { id }),
   readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
   readAudio: (id: number) => invoke<AudioInfo>('read_audio', { id }),
+  /** A system preview handler over the page's area (window pixels); colours as 0x00BBGGRR. */
+  hostShow: (id: number, area: HostArea, bg: number | null, fg: number | null) => invoke<string>('host_show', { id, ...area, bg, fg }),
+  hostArea: (area: HostArea) => invoke<void>('host_area', { ...area }),
+  hostUnload: () => invoke<void>('host_unload'),
   readMarkdown: (id: number) => invoke<MarkdownPreview>('read_markdown', { id }),
   /** A link from a preview: web and mail addresses only (refused otherwise). */
   openUrl: (url: string) => invoke<boolean>('open_url', { url }),

@@ -130,6 +130,10 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-md .footnote-definition:first-of-type { border-top: 1px solid var(--border-subtle); padding-top: .8em; }
 .look-md .footnote-definition p { margin: 0; }
 
+/* The system preview handler's window lies over this box. */
+.look-host { display: flex; background: var(--bg-canvas); color: var(--fg-primary); }
+.look-host > * { flex: 1; }
+
 .look-fallback {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   color: var(--fg-secondary);

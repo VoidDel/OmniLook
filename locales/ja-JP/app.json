@@ -17,7 +17,11 @@
     "stereo": "ステレオ",
     "channels": "{count} チャンネル",
     "cannotPlay": "この形式はプレビューで再生できません",
-    "playFailed": "このファイルを再生できませんでした"
+    "playFailed": "このファイルを再生できませんでした",
+    "handler": "システムのプレビューハンドラー",
+    "noHandler": "この種類のプレビューハンドラーがありません",
+    "handlerFailed": "プレビューハンドラーがこのファイルを表示できませんでした",
+    "handlerTimeout": "プレビューハンドラーが応答しません"
   },
   "settings": {
     "title": "Omni Look の設定",

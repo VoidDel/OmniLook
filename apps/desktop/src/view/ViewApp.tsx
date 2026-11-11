@@ -84,7 +84,18 @@ export function ViewApp() {
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Keys a system preview handler passed back (its window has the keyboard, not the page).
+    let offHost: (() => void) | undefined;
+    let gone = false;
+    void listen<string>('host-key', (e) => {
+      if (e.payload === 'Escape' || e.payload === 'CtrlSpace') void api.viewClose();
+      else if (e.payload === 'ArrowLeft' || e.payload === 'ArrowRight') void api.viewNav(e.payload === 'ArrowLeft' ? -1 : 1);
+    }).then((u) => (gone ? u() : (offHost = u)));
+    return () => {
+      gone = true;
+      window.removeEventListener('keydown', onKey);
+      offHost?.();
+    };
   }, []);
 
   const name = shown ? (shown.title ?? shown.name) : '';

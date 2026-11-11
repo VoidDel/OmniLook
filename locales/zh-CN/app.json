@@ -17,7 +17,11 @@
     "stereo": "立体声",
     "channels": "{count} 声道",
     "cannotPlay": "预览中无法播放这种格式",
-    "playFailed": "无法播放这个文件"
+    "playFailed": "无法播放这个文件",
+    "handler": "系统预览程序",
+    "noHandler": "系统里没有这种文件的预览程序",
+    "handlerFailed": "预览程序无法显示这个文件",
+    "handlerTimeout": "预览程序没有响应"
   },
   "settings": {
     "title": "Omni Look 设置",
