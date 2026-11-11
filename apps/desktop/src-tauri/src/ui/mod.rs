@@ -342,6 +342,20 @@ fn run(role: Role) -> ExitCode {
             });
     }
     let result = builder
+        .on_window_event(|window, event| match event {
+            // Moved to a display with another scale: icons for the new DPI.
+            tauri::WindowEvent::ScaleFactorChanged { .. } => {
+                if let Ok(h) = window.hwnd() {
+                    crate::win_icon::apply(h.0 as isize);
+                }
+            }
+            tauri::WindowEvent::Destroyed => {
+                if let Ok(h) = window.hwnd() {
+                    crate::win_icon::forget(h.0 as isize);
+                }
+            }
+            _ => {}
+        })
         .invoke_handler(tauri::generate_handler![
             view_ready,
             view_show,
@@ -376,7 +390,8 @@ fn run(role: Role) -> ExitCode {
                         .skip_taskbar(true)
                         .additional_browser_args(&browser_args(gpu))
                         .data_directory(paths::webview_dir(gpu))
-                        .build()?;
+                        .build()
+                        .inspect(window_icons)?;
                     serve_view_pipe(handle);
                 }
                 Role::Settings => {
@@ -392,7 +407,8 @@ fn run(role: Role) -> ExitCode {
                     .visible(false)
                     .additional_browser_args(&browser_args(false))
                     .data_directory(paths::webview_dir(false))
-                    .build()?;
+                    .build()
+                    .inspect(window_icons)?;
                     serve_settings_pipe(handle);
                 }
             }
@@ -402,6 +418,14 @@ fn run(role: Role) -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(_) => ExitCode::FAILURE,
+    }
+}
+
+/// A new window's taskbar, Alt+Tab and title icons at its DPI (`win_icon`): Tauri sets only a
+/// 32 px small icon, which the taskbar stretches.
+fn window_icons(w: &WebviewWindow) {
+    if let Ok(h) = w.hwnd() {
+        crate::win_icon::apply(h.0 as isize);
     }
 }
 

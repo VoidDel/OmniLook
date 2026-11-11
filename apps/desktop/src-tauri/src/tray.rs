@@ -9,14 +9,16 @@ use windows::{
         Foundation::{HWND, LPARAM, LRESULT, POINT, WPARAM},
         System::LibraryLoader::GetModuleHandleW,
         UI::{
+            HiDpi::{GetDpiForSystem, GetSystemMetricsForDpi},
             Shell::{
                 NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NOTIFYICONDATAW,
                 Shell_NotifyIconW,
             },
             WindowsAndMessaging::{
-                AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyMenu,
-                GetCursorPos, LoadIconW, MF_SEPARATOR, MF_STRING, PostQuitMessage, RegisterClassW,
-                RegisterWindowMessageW, SetForegroundWindow, TPM_RETURNCMD, TPM_RIGHTBUTTON,
+                AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyIcon,
+                DestroyMenu, GetCursorPos, HICON, IMAGE_ICON, LR_DEFAULTCOLOR, LoadImageW,
+                MF_SEPARATOR, MF_STRING, PostQuitMessage, RegisterClassW, RegisterWindowMessageW,
+                SM_CXSMICON, SM_CYSMICON, SetForegroundWindow, TPM_RETURNCMD, TPM_RIGHTBUTTON,
                 TrackPopupMenu, WINDOW_EX_STYLE, WM_APP, WM_CONTEXTMENU, WM_LBUTTONUP,
                 WM_RBUTTONUP, WNDCLASSW, WS_OVERLAPPED,
             },
@@ -65,10 +67,26 @@ fn data(hwnd: HWND) -> NOTIFYICONDATAW {
         uCallbackMessage: CALLBACK,
         ..Default::default()
     };
+    // The small-icon size at the system's scale, drawn from the frame of that size: LoadIconW
+    // gives the 32 px large icon, which the notification area shrinks (soft, and smaller-looking
+    // than its neighbours).
     unsafe {
         if let Ok(m) = GetModuleHandleW(None) {
-            d.hIcon = LoadIconW(Some(m.into()), PCWSTR(ICON_RESOURCE as usize as *const u16))
-                .unwrap_or_default();
+            let dpi = GetDpiForSystem();
+            let (w, h) = (
+                GetSystemMetricsForDpi(SM_CXSMICON, dpi),
+                GetSystemMetricsForDpi(SM_CYSMICON, dpi),
+            );
+            if let Ok(icon) = LoadImageW(
+                Some(m.into()),
+                PCWSTR(ICON_RESOURCE as usize as *const u16),
+                IMAGE_ICON,
+                w,
+                h,
+                LR_DEFAULTCOLOR,
+            ) {
+                d.hIcon = HICON(icon.0);
+            }
         }
     }
     for (i, c) in "Omni Look".encode_utf16().enumerate() {
@@ -78,8 +96,13 @@ fn data(hwnd: HWND) -> NOTIFYICONDATAW {
 }
 
 fn add(hwnd: HWND) {
+    let d = data(hwnd);
     unsafe {
-        let _ = Shell_NotifyIconW(NIM_ADD, &data(hwnd));
+        let _ = Shell_NotifyIconW(NIM_ADD, &d);
+        // The notification area keeps its own copy.
+        if !d.hIcon.is_invalid() {
+            let _ = DestroyIcon(d.hIcon);
+        }
     }
 }
 
@@ -172,7 +195,13 @@ pub fn set(visible: bool, lang: &str) {
             WINDOW.with(|w| w.set(Some(hwnd)));
         },
         (false, Some(hwnd)) => unsafe {
-            let _ = Shell_NotifyIconW(NIM_DELETE, &data(hwnd));
+            let d = NOTIFYICONDATAW {
+                cbSize: size_of::<NOTIFYICONDATAW>() as u32,
+                hWnd: hwnd,
+                uID: ID,
+                ..Default::default()
+            };
+            let _ = Shell_NotifyIconW(NIM_DELETE, &d);
             let _ = windows::Win32::UI::WindowsAndMessaging::DestroyWindow(hwnd);
             WINDOW.with(|w| w.set(None));
         },

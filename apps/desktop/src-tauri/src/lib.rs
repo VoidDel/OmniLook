@@ -23,6 +23,8 @@ mod system;
 mod tray;
 #[cfg(windows)]
 mod ui;
+#[cfg(windows)]
+mod win_icon;
 
 use std::process::ExitCode;
 
