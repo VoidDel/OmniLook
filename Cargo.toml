@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = ["crates/omnilook-win", "spikes/m0-viewer"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+authors = ["Omni Look Contributors"]
+repository = "https://github.com/VoidDel/OmniLook"
+publish = false
+
+[workspace.dependencies]
+omnilook-win = { path = "crates/omnilook-win" }
+windows = "0.62"
+windows-core = "0.62"

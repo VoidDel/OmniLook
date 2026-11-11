@@ -1,10 +1,10 @@
 # Omni Look
 
-Windows 上的快速预览：在资源管理器或桌面选中文件按空格，立即预览；再按空格或 Esc 关闭，方向键切换相邻文件。支持文本与代码高亮、图片、压缩包目录树，以及 PDF、音视频和 Office（经系统预览程序）。Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Omni Download](https://github.com/VoidDel/OmniDownloadeManager) 同属 Omni 家族，共用设计系统 [omni-ui](https://github.com/VoidDel/omni-ui)。
+Windows 上的快速预览：在资源管理器或桌面选中文件按 Ctrl+空格（可改为单独的空格），立即预览；再按一次或 Esc 关闭，方向键切换相邻文件。支持文本与代码高亮、图片、压缩包目录树，以及 PDF、音视频和 Office（经系统预览程序）。Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Omni Download](https://github.com/VoidDel/OmniDownloadeManager) 同属 Omni 家族，共用设计系统 [omni-ui](https://github.com/VoidDel/omni-ui)。
 
 装了 Omni Look 时，OmniZip 中预览压缩包里的文件也交给它显示。
 
-> 当前进度：**规划阶段**，尚无可运行的代码。方案、架构与路线图见 [开发方案](docs/development-plan.md)。
+> 当前进度：**M0 原型验证**。方案、架构与路线图见 [开发方案](docs/development-plan.md)，原型结果见 [M0 验证结果](docs/m0-results.md)。
 
 ## 规划的目录
 

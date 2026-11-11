@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Omni Look M0</title>
+    <style>
+      :root { color-scheme: light dark; font: 13px system-ui, "Segoe UI", sans-serif; }
+      html, body { margin: 0; height: 100%; }
+      body { display: flex; flex-direction: column; background: Canvas; color: CanvasText; }
+      header { padding: 8px 12px; border-bottom: 1px solid #8884; display: flex; gap: 12px; }
+      header .meta { opacity: .6; }
+      main { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+      main > img, main > video { max-width: 100%; max-height: 100%; }
+      main > iframe { border: 0; width: 100%; height: 100%; }
+      main > pre { margin: 0; padding: 12px; width: 100%; height: 100%; box-sizing: border-box; overflow: auto; font: 12px Consolas, monospace; }
+      main > .handler { width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <header><b id="name">—</b><span class="meta" id="meta"></span></header>
+    <main id="stage"></main>
+    <script src="main.js"></script>
+  </body>
+</html>
