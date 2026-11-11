@@ -7,8 +7,8 @@ use windows::{
         Foundation::{E_NOTIMPL, RECT},
         System::{
             Com::{
-                DISPATCH_FLAGS, DISPPARAMS, EXCEPINFO, IConnectionPoint,
-                IConnectionPointContainer, IDispatch, IDispatch_Impl, ITypeInfo,
+                DISPATCH_FLAGS, DISPPARAMS, EXCEPINFO, IConnectionPoint, IConnectionPointContainer,
+                IDispatch, IDispatch_Impl, ITypeInfo,
             },
             Variant::VARIANT,
         },
@@ -39,7 +39,14 @@ impl IDispatch_Impl for Sink_Impl {
         Err(E_NOTIMPL.into())
     }
 
-    fn GetIDsOfNames(&self, _: *const GUID, _: *const PCWSTR, _: u32, _: u32, _: *mut i32) -> Result<()> {
+    fn GetIDsOfNames(
+        &self,
+        _: *const GUID,
+        _: *const PCWSTR,
+        _: u32,
+        _: u32,
+        _: *mut i32,
+    ) -> Result<()> {
         Err(E_NOTIMPL.into())
     }
 

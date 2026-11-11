@@ -16,11 +16,19 @@ pub enum Request {
         title: Option<String>,
     },
     /// A preview process is ready for files on `pipe`.
-    ViewReady { pid: u32, pipe: String },
+    ViewReady {
+        pid: u32,
+        pipe: String,
+    },
     /// The user closed the preview window.
-    ViewClosed { pid: u32 },
+    ViewClosed {
+        pid: u32,
+    },
     /// An arrow key in the preview window: the next (`1`) or previous (`-1`) file.
-    Nav { pid: u32, step: i32 },
+    Nav {
+        pid: u32,
+        step: i32,
+    },
     /// The settings changed on disk.
     Reload,
     Quit,

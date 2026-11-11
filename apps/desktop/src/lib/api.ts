@@ -37,13 +37,63 @@ export interface Settings {
   appearance: Appearance | null;
 }
 
+export interface TextPreview {
+  text: string;
+  truncated: boolean;
+  encoding: string;
+  language: string | null;
+}
+
+export interface HexPreview {
+  dump: string;
+  truncated: boolean;
+}
+
+export interface FolderItem {
+  name: string;
+  dir: boolean;
+  size: number;
+  modified: number | null;
+}
+
+export interface FolderPreview {
+  items: FolderItem[];
+  files: number;
+  folders: number;
+  bytes: number;
+  complete: boolean;
+}
+
+export interface ArchiveEntry {
+  path: string;
+  dir: boolean;
+  size: number;
+  encrypted: boolean;
+}
+
+export interface ArchivePreview {
+  format: string;
+  entries: ArchiveEntry[];
+  files: number;
+  folders: number;
+  size: number;
+  encrypted: boolean;
+  truncated: boolean;
+  error: string | null;
+}
+
 export const api = {
   viewReady: () => invoke<Shown | null>('view_ready'),
   viewShow: () => invoke<void>('view_show'),
   viewClose: () => invoke<void>('view_close'),
   viewNav: (step: number) => invoke<void>('view_nav', { step }),
   openDefault: () => invoke<boolean>('open_default'),
-  readText: (id: number) => invoke<string>('read_text', { id }),
+  readText: (id: number) => invoke<TextPreview>('read_text', { id }),
+  /** Flat [start, length, class] triples in UTF-16 units. */
+  highlight: (id: number) => invoke<number[]>('highlight', { id }),
+  readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
+  readFolder: (id: number) => invoke<FolderPreview>('read_folder', { id }),
+  readArchive: (id: number, locale: string) => invoke<ArchivePreview>('read_archive', { id, locale }),
   getSettings: () => invoke<Settings>('get_settings'),
   saveSettings: (settings: Settings) => invoke<void>('save_settings', { settings }),
   appVersion: () => invoke<string>('app_version'),

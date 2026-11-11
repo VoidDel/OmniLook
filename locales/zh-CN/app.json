@@ -5,7 +5,11 @@
   },
   "view": {
     "openDefault": "用默认程序打开",
-    "openDefaultHint": "用默认程序打开（Ctrl+Enter）"
+    "openDefaultHint": "用默认程序打开（Ctrl+Enter）",
+    "plainText": "纯文本",
+    "lines": "{count, plural, other {# 行}}",
+    "truncated": "只显示了开头部分",
+    "loading": "正在读取…"
   },
   "settings": {
     "title": "Omni Look 设置",
@@ -24,5 +28,22 @@
     "modeDark": "深色",
     "lightTheme": "浅色主题",
     "darkTheme": "深色主题"
+  },
+  "archive": {
+    "summary": "{files} 个文件，{folders} 个文件夹，共 {size}",
+    "encrypted": "已加密",
+    "truncated": "条目太多，只列出前 20000 项",
+    "passwordRequired": "文件名已加密，需要密码才能查看",
+    "error": "无法读取这个压缩包",
+    "folderFiles": "{count, plural, other {# 个文件}}"
+  },
+  "folder": {
+    "summary": "{files} 个文件，{folders} 个文件夹，共 {size}",
+    "atLeast": "至少 {summary}",
+    "empty": "空文件夹"
+  },
+  "hex": {
+    "binary": "二进制文件",
+    "first": "二进制文件，显示前 4 KB"
   }
 }

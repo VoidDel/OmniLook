@@ -100,7 +100,8 @@ Omni Look 是 Omni 家族（[OmniZip](https://github.com/VoidDel/OmniZip)、[Omn
 | Windows 系统接口 | `windows` crate | 键盘钩子、Shell COM（选中项、视图事件）、预览程序宿主 |
 | 代码高亮 | `syntect` | Rust 侧切分语法，只把"类别 + 位置"传给界面；约 200 种语言；界面不插入 HTML |
 | 文本编码 | `encoding_rs` + `chardetng` | 与 OmniZip 预览一致（GBK、Shift_JIS 等） |
-| 图片 | `image`（重编码为 PNG）、`resvg`（SVG 渲染为位图） | 界面不直接解析可疑图片；SVG 里的脚本与外链不会执行 |
+| 图片 | WebView2 直接显示（在沙箱渲染进程里解码，与 PDF、音视频一样）；WebView 不支持的 TIFF 由 `image` 转成 PNG | 2026-11-11 改：在 Rust 里重编码大图要几百毫秒，冷启动预算放不下 |
+| SVG | 作为 `<img>` 显示 | 图片上下文里的 SVG 不执行脚本、不加载外部资源，不需要 `resvg` |
 | Markdown | `pulldown-cmark` + `ammonia` | 渲染后再净化，不加载远程图片 |
 | 压缩包 | `omnizip-formats`（git 依赖） | 同一作者、MIT；格式覆盖与 OmniZip 一致 |
 | PDF | WebView2 内置 PDF 查看器（Windows） | 零体积；在 Chromium 沙箱内解析。M0 验证经自定义协议加载可行，否则换 pdf.js |
@@ -210,8 +211,8 @@ omnilook.exe --view（预览进程，每次预览启动，关闭预览即退出�
 | 预览器 | 类型 | 实现 | 里程碑 |
 |---|---|---|---|
 | 文本 / 代码 | 文本类扩展名、无 NUL 的未知文件 | 编码识别 → 最多 2M 字符；≤ 512 KB 做 `syntect` 高亮，更大的按纯文本显示 | M1 |
-| 图片 | png / jpg / gif / webp / bmp / ico / tiff | `image` 解码，大图缩到 2048 px 后重编码为 PNG，经自定义协议传给界面 | M1 |
-| SVG | svg | `resvg` 渲染为位图；可切换到源码视图 | M1 |
+| 图片 | png / jpg / gif / webp / bmp / ico / avif / tiff | WebView 经 `look://` 直接显示；TIFF 由 `image` 转成 PNG（大于 4096 px 先缩小） | M1 |
+| SVG | svg | 作为 `<img>` 显示（不执行脚本、不加载外部资源）；源码视图 M2 | M1 |
 | 压缩包 | OmniZip 能读的全部格式 | `omnizip-formats` 列出目录树、大小、压缩率、加密与否；"在 OmniZip 中打开" | M1 |
 | 文件夹 | 目录 | 项数、总大小（后台计算，可取消）、最近修改 | M1 |
 | 十六进制 | 其余文件 | 前 4 KB 十六进制 + 文件信息 | M1 |
@@ -298,8 +299,8 @@ OmniZip 解压相邻条目后回复：
 
 预览的文件可能来自网络，按不可信输入处理：
 
-- **解析在内存安全的代码里做**：文本、图片、SVG、Markdown、压缩包都在 Rust 中解析；界面只接收已净化的结果（文本、PNG、语法区间、目录树）。
-- **交给 Chromium 沙箱的只有 PDF 与音视频**：它们在 WebView2 的渲染进程沙箱内解析。
+- **解析在内存安全的代码里做**：文本、Markdown、压缩包、TIFF 在 Rust 中解析；界面只接收已净化的结果（文本、语法区间、目录树、PNG）。
+- **交给 Chromium 沙箱的是图片、SVG、PDF 与音视频**：它们在 WebView2 的渲染进程沙箱内解码；SVG 只作为图片显示，不执行脚本。
 - **第三方预览程序在代理进程中运行**（§5.2），不进入 Omni Look 进程。
 - **不联网**：CSP 禁止一切外部连接，`connect-src` 只允许 IPC；WebView 禁止导航到其他页面；Markdown 与 SVG 中的远程资源不加载。
 - **资源上限**：文本读取上限、图片边长与内存上限、压缩包条目数上限（沿用 OmniZip 的策略）、生成预览超时。

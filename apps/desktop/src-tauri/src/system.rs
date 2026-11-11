@@ -38,7 +38,9 @@ fn set_sz(key: HKEY, sub: &str, name: Option<&str>, value: &str) {
         let _ = RegSetKeyValueW(
             key,
             &HSTRING::from(sub),
-            name.as_ref().map(|n| PCWSTR(n.as_ptr())).unwrap_or(PCWSTR::null()),
+            name.as_ref()
+                .map(|n| PCWSTR(n.as_ptr()))
+                .unwrap_or(PCWSTR::null()),
             REG_SZ.0,
             Some(data.as_ptr().cast()),
             (data.len() * 2) as u32,
@@ -76,8 +78,16 @@ pub fn exe() -> PathBuf {
 pub fn register() {
     let exe = exe();
     let exe_s = exe.to_string_lossy();
-    let dir = exe.parent().map(|d| d.to_string_lossy().into_owned()).unwrap_or_default();
-    set_sz(HKEY_CURRENT_USER, r"Software\OmniLook", Some("InstallPath"), &dir);
+    let dir = exe
+        .parent()
+        .map(|d| d.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    set_sz(
+        HKEY_CURRENT_USER,
+        r"Software\OmniLook",
+        Some("InstallPath"),
+        &dir,
+    );
     set_sz(HKEY_CURRENT_USER, r"Software\OmniLook", Some("Exe"), &exe_s);
     let v = PROTOCOL_VERSION.to_le_bytes();
     unsafe {
@@ -107,7 +117,11 @@ pub fn set_autostart(on: bool) {
         }
     } else {
         unsafe {
-            let _ = RegDeleteKeyValueW(HKEY_CURRENT_USER, &HSTRING::from(RUN), &HSTRING::from(RUN_NAME));
+            let _ = RegDeleteKeyValueW(
+                HKEY_CURRENT_USER,
+                &HSTRING::from(RUN),
+                &HSTRING::from(RUN_NAME),
+            );
         }
     }
 }
@@ -145,7 +159,9 @@ impl Log {
         let dir = paths::local_dir();
         let _ = std::fs::create_dir_all(&dir);
         let p = dir.join(name);
-        let big = std::fs::metadata(&p).map(|m| m.len() > 1 << 20).unwrap_or(false);
+        let big = std::fs::metadata(&p)
+            .map(|m| m.len() > 1 << 20)
+            .unwrap_or(false);
         let f = std::fs::OpenOptions::new()
             .create(true)
             .append(!big)

@@ -28,9 +28,8 @@ use windows::{
             TOKEN_USER, TokenUser,
         },
         Storage::FileSystem::{
-            CreateFileW, FILE_FLAG_FIRST_PIPE_INSTANCE, FILE_FLAGS_AND_ATTRIBUTES,
-            FILE_SHARE_NONE, FlushFileBuffers, OPEN_EXISTING, PIPE_ACCESS_DUPLEX, ReadFile,
-            WriteFile,
+            CreateFileW, FILE_FLAG_FIRST_PIPE_INSTANCE, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_NONE,
+            FlushFileBuffers, OPEN_EXISTING, PIPE_ACCESS_DUPLEX, ReadFile, WriteFile,
         },
         System::{
             Pipes::{
@@ -39,8 +38,7 @@ use windows::{
                 PIPE_TYPE_BYTE, PIPE_UNLIMITED_INSTANCES, PIPE_WAIT, WaitNamedPipeW,
             },
             Threading::{
-                GetCurrentProcess, OpenProcess, OpenProcessToken,
-                PROCESS_QUERY_LIMITED_INFORMATION,
+                GetCurrentProcess, OpenProcess, OpenProcessToken, PROCESS_QUERY_LIMITED_INFORMATION,
             },
         },
     },
@@ -266,7 +264,10 @@ mod tests {
     fn round_trip_and_single_server() {
         let name = pipe_name(&format!("test-{}", std::process::id())).unwrap();
         serve(&name, Arc::new(|l: String| format!("echo {l}"))).unwrap();
-        assert!(serve(&name, Arc::new(|l| l)).is_err(), "second server refused");
+        assert!(
+            serve(&name, Arc::new(|l| l)).is_err(),
+            "second server refused"
+        );
         for i in 0..5 {
             let a = request(&name, &format!("hello {i}"), Duration::from_secs(2)).unwrap();
             assert_eq!(a, format!("echo hello {i}"));

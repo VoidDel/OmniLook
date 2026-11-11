@@ -31,8 +31,8 @@ use windows::Win32::{
 };
 
 use crate::{
-    protocol::{Reply, Request, ViewCommand},
     paths,
+    protocol::{Reply, Request, ViewCommand},
     settings::{Hotkey, Settings},
     system::{self, Log},
 };
@@ -199,11 +199,14 @@ impl Agent {
             cmd.arg("--gpu");
         }
         // CREATE_NO_WINDOW: no console flashes for a debug build.
-        cmd.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
         match cmd.creation_flags(0x0800_0000).spawn() {
             Ok(mut child) => {
                 let pid = child.id();
-                self.log.line(format!("view {pid} for {} (gpu {gpu})", path.display()));
+                self.log
+                    .line(format!("view {pid} for {} (gpu {gpu})", path.display()));
                 let wake = self.wake.clone();
                 std::thread::spawn(move || {
                     let _ = child.wait();
@@ -262,7 +265,10 @@ impl Agent {
 
     fn close_view(&mut self) {
         if let Some(v) = self.view.take() {
-            let closed = v.pipe.as_deref().is_some_and(|p| Self::send_view(p, &ViewCommand::Close));
+            let closed = v
+                .pipe
+                .as_deref()
+                .is_some_and(|p| Self::send_view(p, &ViewCommand::Close));
             if !closed {
                 system::terminate(v.pid);
             }
@@ -426,4 +432,3 @@ pub fn run() -> ExitCode {
     agent.log.line("agent stopped");
     ExitCode::SUCCESS
 }
-

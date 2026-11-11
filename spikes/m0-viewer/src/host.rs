@@ -7,17 +7,21 @@ use windows::{
     Win32::{
         Foundation::{ERROR_SUCCESS, HWND, RECT},
         System::{
-            Com::{CLSCTX_INPROC_SERVER, CLSCTX_LOCAL_SERVER, CoCreateInstance, STGM_READ, STGM_SHARE_DENY_NONE},
+            Com::{
+                CLSCTX_INPROC_SERVER, CLSCTX_LOCAL_SERVER, CoCreateInstance, STGM_READ,
+                STGM_SHARE_DENY_NONE,
+            },
             Registry::{HKEY_CLASSES_ROOT, RRF_RT_REG_SZ, RegGetValueW},
         },
         UI::{
             Shell::{
-                IInitializeWithItem, IPreviewHandler, IShellItem, PropertiesSystem::{IInitializeWithFile, IInitializeWithStream},
+                IInitializeWithItem, IPreviewHandler, IShellItem,
+                PropertiesSystem::{IInitializeWithFile, IInitializeWithStream},
                 SHCreateItemFromParsingName, SHCreateStreamOnFileEx,
             },
             WindowsAndMessaging::{
-                CreateWindowExW, DestroyWindow, HWND_TOP, SWP_SHOWWINDOW, SetWindowPos, WINDOW_EX_STYLE,
-                WS_CHILD, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_VISIBLE,
+                CreateWindowExW, DestroyWindow, HWND_TOP, SWP_SHOWWINDOW, SetWindowPos,
+                WINDOW_EX_STYLE, WS_CHILD, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_VISIBLE,
             },
         },
     },
@@ -83,8 +87,21 @@ pub fn resize(rect: RECT) {
         if let Some(h) = h.borrow().as_ref() {
             let (w, ht) = (rect.right - rect.left, rect.bottom - rect.top);
             unsafe {
-                let _ = SetWindowPos(h.child, Some(HWND_TOP), rect.left, rect.top, w, ht, SWP_SHOWWINDOW);
-                let inner = RECT { left: 0, top: 0, right: w, bottom: ht };
+                let _ = SetWindowPos(
+                    h.child,
+                    Some(HWND_TOP),
+                    rect.left,
+                    rect.top,
+                    w,
+                    ht,
+                    SWP_SHOWWINDOW,
+                );
+                let inner = RECT {
+                    left: 0,
+                    top: 0,
+                    right: w,
+                    bottom: ht,
+                };
                 let _ = h.handler.SetRect(&inner);
             }
         }
@@ -120,7 +137,9 @@ pub fn show(parent: HWND, path: &Path, rect: RECT, step: &dyn Fn(&str)) -> Resul
                 .and_then(|item| i.Initialize(&item, STGM_READ.0))
                 .map(|_| "item")
         } else {
-            Err(windows::core::Error::from(windows::Win32::Foundation::E_NOINTERFACE))
+            Err(windows::core::Error::from(
+                windows::Win32::Foundation::E_NOINTERFACE,
+            ))
         }
     }
     .map_err(|e| format!("initialize: {e}"))?;
@@ -144,18 +163,34 @@ pub fn show(parent: HWND, path: &Path, rect: RECT, step: &dyn Fn(&str)) -> Resul
     }
     .map_err(|e| format!("child window: {e}"))?;
     unsafe {
-        let _ = SetWindowPos(child, Some(HWND_TOP), rect.left, rect.top, w, h, SWP_SHOWWINDOW);
+        let _ = SetWindowPos(
+            child,
+            Some(HWND_TOP),
+            rect.left,
+            rect.top,
+            w,
+            h,
+            SWP_SHOWWINDOW,
+        );
     }
-    let inner = RECT { left: 0, top: 0, right: w, bottom: h };
+    let inner = RECT {
+        left: 0,
+        top: 0,
+        right: w,
+        bottom: h,
+    };
     step("SetWindow");
     let r = unsafe {
-        handler.SetWindow(child, &inner).and_then(|_| {
-            step("SetRect");
-            handler.SetRect(&inner)
-        }).and_then(|_| {
-            step("DoPreview");
-            handler.DoPreview()
-        })
+        handler
+            .SetWindow(child, &inner)
+            .and_then(|_| {
+                step("SetRect");
+                handler.SetRect(&inner)
+            })
+            .and_then(|_| {
+                step("DoPreview");
+                handler.DoPreview()
+            })
     };
     step("done");
     if let Err(e) = r {

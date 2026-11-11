@@ -14,7 +14,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use omnilook_core::{Kind, detect};
+use omnilook_core::{Kind, archive, detect, folder, hex, text};
 use omnilook_win::{events::window_rect, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -227,15 +227,69 @@ fn open_default(state: tauri::State<'_, ViewState>) -> bool {
     state.shown().is_some_and(|s| system::open_default(&s.path))
 }
 
-/// Text of the file shown (`id`): the first 2 MB, decoded as UTF-8.
+/// The path of the file shown, if it is still `id`.
+fn path_of(state: &ViewState, id: u64) -> Result<PathBuf, String> {
+    state
+        .shown()
+        .filter(|s| s.id == id)
+        .map(|s| s.path)
+        .ok_or_else(|| "stale".into())
+}
+
+/// Runs a previewer off the window's thread.
+async fn blocking<T: Send + 'static>(
+    f: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(f)
+        .await
+        .map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
-fn read_text(id: u64, state: tauri::State<'_, ViewState>) -> Result<String, String> {
-    let s = state.shown().filter(|s| s.id == id).ok_or("stale")?;
-    let mut f = std::fs::File::open(&s.path).map_err(|e| e.to_string())?;
-    let mut buf = Vec::new();
-    std::io::Read::read_to_end(&mut std::io::Read::take(&mut f, 2 << 20), &mut buf)
-        .map_err(|e| e.to_string())?;
-    Ok(String::from_utf8_lossy(&buf).into_owned())
+async fn read_text(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<text::TextPreview, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || text::read(&path).map_err(|e| e.to_string())).await
+}
+
+/// Token classes for the text (`text::highlight`), asked for after the plain text is shown.
+/// The file is read again rather than the text sent back: reading is cheaper.
+#[tauri::command]
+async fn highlight(id: u64, state: tauri::State<'_, ViewState>) -> Result<Vec<u32>, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || {
+        let t = text::read(&path).map_err(|e| e.to_string())?;
+        Ok(text::highlight(&path, &t.text))
+    })
+    .await
+}
+
+#[tauri::command]
+async fn read_hex(id: u64, state: tauri::State<'_, ViewState>) -> Result<hex::HexPreview, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || hex::read(&path).map_err(|e| e.to_string())).await
+}
+
+#[tauri::command]
+async fn read_folder(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<folder::FolderPreview, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || folder::read(&path, Duration::from_millis(400)).map_err(|e| e.to_string()))
+        .await
+}
+
+#[tauri::command]
+async fn read_archive(
+    id: u64,
+    locale: String,
+    state: tauri::State<'_, ViewState>,
+) -> Result<archive::ArchivePreview, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || Ok(archive::read(&path, Some(&locale)))).await
 }
 
 // --- settings commands ------------------------------------------------------------------------
@@ -271,7 +325,8 @@ fn run(role: Role) -> ExitCode {
     let gpu = matches!(&role, Role::View(a) if a.gpu);
     let mut builder = tauri::Builder::default();
     if let Role::View(args) = &role {
-        let pipe_name = pipe::pipe_name(&format!("view-{}", std::process::id())).unwrap_or_default();
+        let pipe_name =
+            pipe::pipe_name(&format!("view-{}", std::process::id())).unwrap_or_default();
         let state = ViewState {
             current: Mutex::new(None),
             next: AtomicU64::new(0),
@@ -294,6 +349,10 @@ fn run(role: Role) -> ExitCode {
             view_nav,
             open_default,
             read_text,
+            highlight,
+            read_hex,
+            read_folder,
+            read_archive,
             get_settings,
             save_settings,
             app_version

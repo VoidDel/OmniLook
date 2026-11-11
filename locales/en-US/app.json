@@ -5,7 +5,11 @@
   },
   "view": {
     "openDefault": "Open with default app",
-    "openDefaultHint": "Open with the default app (Ctrl+Enter)"
+    "openDefaultHint": "Open with the default app (Ctrl+Enter)",
+    "plainText": "Plain text",
+    "lines": "{count, plural, one {# line} other {# lines}}",
+    "truncated": "Only the beginning is shown",
+    "loading": "Reading…"
   },
   "settings": {
     "title": "Omni Look Settings",
@@ -24,5 +28,22 @@
     "modeDark": "Dark",
     "lightTheme": "Light theme",
     "darkTheme": "Dark theme"
+  },
+  "archive": {
+    "summary": "{files, plural, one {# file} other {# files}}, {folders, plural, one {# folder} other {# folders}}, {size} in all",
+    "encrypted": "Encrypted",
+    "truncated": "Too many entries: the first 20,000 are listed",
+    "passwordRequired": "The file names are encrypted: a password is needed to list them",
+    "error": "This archive cannot be read",
+    "folderFiles": "{count, plural, one {# file} other {# files}}"
+  },
+  "folder": {
+    "summary": "{files, plural, one {# file} other {# files}}, {folders, plural, one {# folder} other {# folders}}, {size} in all",
+    "atLeast": "At least {summary}",
+    "empty": "Empty folder"
+  },
+  "hex": {
+    "binary": "Binary file",
+    "first": "Binary file, first 4 KB shown"
   }
 }

@@ -5,7 +5,11 @@
   },
   "view": {
     "openDefault": "以預設程式開啟",
-    "openDefaultHint": "以預設程式開啟（Ctrl+Enter）"
+    "openDefaultHint": "以預設程式開啟（Ctrl+Enter）",
+    "plainText": "純文字",
+    "lines": "{count, plural, other {# 行}}",
+    "truncated": "只顯示了開頭部分",
+    "loading": "正在讀取…"
   },
   "settings": {
     "title": "Omni Look 設定",
@@ -24,5 +28,22 @@
     "modeDark": "深色",
     "lightTheme": "淺色主題",
     "darkTheme": "深色主題"
+  },
+  "archive": {
+    "summary": "{files} 個檔案，{folders} 個資料夾，共 {size}",
+    "encrypted": "已加密",
+    "truncated": "項目太多，只列出前 20000 項",
+    "passwordRequired": "檔名已加密，需要密碼才能檢視",
+    "error": "無法讀取這個壓縮檔",
+    "folderFiles": "{count, plural, other {# 個檔案}}"
+  },
+  "folder": {
+    "summary": "{files} 個檔案，{folders} 個資料夾，共 {size}",
+    "atLeast": "至少 {summary}",
+    "empty": "空資料夾"
+  },
+  "hex": {
+    "binary": "二進位檔案",
+    "first": "二進位檔案，顯示前 4 KB"
   }
 }

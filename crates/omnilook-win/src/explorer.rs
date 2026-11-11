@@ -21,8 +21,8 @@ use windows::{
                 _SVGIO, CSIDL_DESKTOP, IFolderView2, IShellBrowser, IShellItem, IShellItemArray,
                 IShellWindows, IWebBrowser2, SID_STopLevelBrowser, SIGDN_FILESYSPATH,
                 SVGIO_ALLVIEW, SVGIO_FLAG_VIEWORDER, SVGIO_SELECTION, SVSI_DESELECTOTHERS,
-                SVSI_ENSUREVISIBLE, SVSI_FOCUSED, SVSI_SELECT, SWC_DESKTOP,
-                SWFO_NEEDDISPATCH, ShellWindows,
+                SVSI_ENSUREVISIBLE, SVSI_FOCUSED, SVSI_SELECT, SWC_DESKTOP, SWFO_NEEDDISPATCH,
+                ShellWindows,
             },
             WindowsAndMessaging::{
                 FindWindowExW, GA_PARENT, GUITHREADINFO, GetAncestor, GetClassNameW,
@@ -92,8 +92,7 @@ pub fn focus() -> Focus {
             cbSize: size_of::<GUITHREADINFO>() as u32,
             ..Default::default()
         };
-        if unsafe { GetGUIThreadInfo(thread, &mut info) }.is_ok() && !info.hwndFocus.is_invalid()
-        {
+        if unsafe { GetGUIThreadInfo(thread, &mut info) }.is_ok() && !info.hwndFocus.is_invalid() {
             focus_class = class_name(info.hwndFocus);
             parent_class = class_name(unsafe { GetAncestor(info.hwndFocus, GA_PARENT) });
         }

@@ -153,7 +153,11 @@ mod tests {
         c.mods.ctrl = true;
         c.preview_open = false;
         c.since_typing_ms = None;
-        assert_eq!(decide(h, Key::Space, &c), Decision::Pass, "Ctrl+Space toggles selection");
+        assert_eq!(
+            decide(h, Key::Space, &c),
+            Decision::Pass,
+            "Ctrl+Space toggles selection"
+        );
     }
 
     #[test]

@@ -40,7 +40,10 @@ fn main() -> windows::core::Result<()> {
                 );
             }
             match View::desktop().and_then(|v| v.snapshot()) {
-                Ok(s) => println!("desktop: selected {:?}, focused {:?}", s.selected, s.focused),
+                Ok(s) => println!(
+                    "desktop: selected {:?}, focused {:?}",
+                    s.selected, s.focused
+                ),
                 Err(e) => println!("desktop: {e}"),
             }
         }

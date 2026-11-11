@@ -26,10 +26,48 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-status .grow { flex: 1; min-width: 0; text-align: right; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; }
 
-.look-text {
-  margin: 0; padding: 12px 16px; overflow: auto; font: 13px/1.55 var(--font-mono, Consolas, monospace);
-  white-space: pre; tab-size: 4; user-select: text;
+/* Text: absolutely placed lines (only those on screen exist), a line-number gutter. */
+.look-text { overflow: auto; font: 13px/20px var(--font-mono, Consolas, monospace); padding: 8px 0; outline: 0; user-select: text; }
+.look-text .tl { position: absolute; left: 0; top: 0; height: 20px; white-space: pre; tab-size: 4; padding-right: 16px; }
+.look-text .ln { display: inline-block; text-align: right; color: var(--fg-muted); padding: 0 14px 0 12px; box-sizing: content-box; user-select: none; }
+/* Token classes (crates/omnilook-core/src/text.rs `Class`). */
+.tk1 { color: var(--fg-muted); font-style: italic; }
+.tk2 { color: #0A7F3F; }
+.tk3, .tk7 { color: #B35C00; }
+.tk4 { color: #8A2BB9; }
+.tk5 { color: #1F5FBF; }
+.tk6 { color: #0E7C86; }
+.tk8 { color: #B3261E; }
+.tk9 { color: #9A6700; }
+.tk10 { color: var(--accent); font-weight: 600; }
+:root[data-appearance="dark"] .tk2 { color: #7FD28F; }
+:root[data-appearance="dark"] :is(.tk3, .tk7) { color: #F0A35E; }
+:root[data-appearance="dark"] .tk4 { color: #D49BFF; }
+:root[data-appearance="dark"] .tk5 { color: #79B8FF; }
+:root[data-appearance="dark"] .tk6 { color: #5FD4D4; }
+:root[data-appearance="dark"] .tk8 { color: #FF8A80; }
+:root[data-appearance="dark"] .tk9 { color: #E8C266; }
+.look-hex { margin: 0; padding: 12px 16px; overflow: auto; font: 13px/20px var(--font-mono, Consolas, monospace); user-select: text; }
+.look-note { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--fg-secondary); }
+.look-note .ic { width: 18px; height: 18px; }
+
+/* Archive and folder lists. */
+.look-list { overflow: auto; padding: 6px 0; }
+.look-list .lr {
+  position: absolute; left: 0; right: 0; top: 0; height: 28px; display: flex; align-items: center; gap: 6px;
+  padding-right: 16px; font-size: .88rem; white-space: nowrap;
 }
+.look-list .lr.static { position: static; padding-left: 16px; }
+.look-list .lr.dir { cursor: default; }
+.look-list .lr:hover { background: var(--bg-hover); }
+.look-list .lr .tw { width: 14px; height: 14px; flex: none; color: var(--fg-muted); }
+.look-list .lr .fi { width: 18px; height: 18px; flex: none; }
+.look-list .lr .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.look-list .lr.dir .nm { font-weight: 500; }
+.look-list .lr .enc { width: 13px; height: 13px; color: var(--warning); }
+.look-list .lr .sz, .look-list .lr .dt { color: var(--fg-secondary); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.look-list .lr .sz { width: 84px; text-align: right; flex: none; }
+.look-list .lr .dt { width: 150px; flex: none; }
 .look-image { display: flex; align-items: center; justify-content: center; overflow: auto; background: var(--bg-subtle, transparent); }
 .look-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .look-frame { border: 0; width: 100%; height: 100%; }

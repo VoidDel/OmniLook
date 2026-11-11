@@ -102,15 +102,15 @@ mod app {
         Some((w, h))
     }
 
-/// WebView2's memory target: low while hidden ( turns it off to compare).
+    /// WebView2's memory target: low while hidden ( turns it off to compare).
     pub fn memory_level(win: &WebviewWindow, low: bool) {
         if std::env::var_os("M0_LOWMEM").is_some_and(|v| v == "0") {
             return;
         }
         let _ = win.with_webview(move |wv| unsafe {
             use webview2_com::Microsoft::Web::WebView2::Win32::{
-                COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW, COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL,
-                ICoreWebView2_19,
+                COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW,
+                COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL, ICoreWebView2_19,
             };
             use windows::core::Interface;
             let level = if low {
@@ -217,9 +217,8 @@ mod app {
         // Size and position go through Tauri (so the webview follows); only the showing is raw
         // Win32, to keep the focus where it is.
         let mut area = RECT::default();
-        let anchored = anchor.is_some_and(|a| unsafe {
-            GetWindowRect(HWND(a as *mut _), &mut area).is_ok()
-        });
+        let anchored =
+            anchor.is_some_and(|a| unsafe { GetWindowRect(HWND(a as *mut _), &mut area).is_ok() });
         let monitors = win.available_monitors().unwrap_or_default();
         let inside = |m: &tauri::Monitor, x: i32, y: i32| {
             let (p, s) = (m.position(), m.size());
@@ -284,7 +283,13 @@ mod app {
         let f = &e.focus;
         st.log(format!(
             "key {:?} -> {:?} [{} | focus {} in {}] file_view={} {:?}",
-            e.key, e.decision, f.foreground_class, f.focus_class, f.parent_class, f.in_file_view, e.mods
+            e.key,
+            e.decision,
+            f.foreground_class,
+            f.focus_class,
+            f.parent_class,
+            f.in_file_view,
+            e.mods
         ));
         match e.decision {
             Decision::Pass => {}
@@ -406,7 +411,9 @@ mod app {
             right: x + w,
             bottom: y + h,
         };
-        let r = host::show(parent, &path, rect, &|s| st.log(format!("#{id} handler step {s}")));
+        let r = host::show(parent, &path, rect, &|s| {
+            st.log(format!("#{id} handler step {s}"))
+        });
         st.log(format!("#{id} handler: {r:?}"));
         r
     }
@@ -477,10 +484,13 @@ mod app {
                     .map(PathBuf::from)
                     .unwrap_or_else(std::env::temp_dir)
                     .join("app.omnilook.m0")
-                    .join(if gpu { "EBWebView-gpu" } else { "EBWebView-cpu" });
-                let mut args = String::from(
-                    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
-                );
+                    .join(if gpu {
+                        "EBWebView-gpu"
+                    } else {
+                        "EBWebView-cpu"
+                    });
+                let mut args =
+                    String::from("--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection");
                 if !gpu {
                     args.push_str(" --disable-gpu");
                 }

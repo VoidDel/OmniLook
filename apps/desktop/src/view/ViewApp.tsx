@@ -5,7 +5,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { FileIcon, Icon } from 'omni-ui';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, type Shown } from '../lib/api';
@@ -16,13 +16,19 @@ import { Preview } from './Preview';
 export function ViewApp() {
   const { t, i18n } = useTranslation();
   const [shown, setShown] = useState<Shown | null>(null);
+  // What the preview says about the file (dimensions, encoding, counts), for the status line.
+  const [meta, setMeta] = useState('');
+  const onMeta = useCallback((m: string) => setMeta(m), []);
   const firstPaint = useRef(false);
 
   // Listen first, then ask for the first file: a file sent before the listener is up is lost.
   useEffect(() => {
     let off: (() => void) | undefined;
     let gone = false;
-    void listen<Shown>('show', (e) => setShown(e.payload)).then((u) => {
+    void listen<Shown>('show', (e) => {
+      setMeta('');
+      setShown(e.payload);
+    }).then((u) => {
       if (gone) return u();
       off = u;
       void api.viewReady().then((s) => s && setShown(s));
@@ -84,12 +90,13 @@ export function ViewApp() {
           </div>
         </div>
       </header>
-      <main className="look-body">{shown && <Preview key={shown.id} shown={shown} />}</main>
+      <main className="look-body">{shown && <Preview key={shown.id} shown={shown} onMeta={onMeta} />}</main>
       <footer className="look-status">
         {shown && (
           <>
             <span>{formatSize(shown.size)}</span>
             <span>{formatDate(shown.modified, i18n.language)}</span>
+            {meta && <span>{meta}</span>}
             <span className="grow ellipsis" title={shown.path}>
               {shown.path}
             </span>

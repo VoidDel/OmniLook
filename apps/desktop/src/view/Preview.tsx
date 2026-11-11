@@ -1,29 +1,22 @@
 // One file's preview, by its kind (docs/development-plan.md §5.1). Images, PDF and media come
-// from look:// (the file only, by a one-time token); text comes through a command.
+// from look:// (the file only, by a one-time token); the rest through commands.
 
 import { FileIcon } from 'omni-ui';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { api, type Shown } from '../lib/api';
+import { api, type HexPreview, type Shown } from '../lib/api';
 import { formatSize } from '../lib/format';
-
-function TextPreview({ shown }: { shown: Shown }) {
-  const [text, setText] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    api.readText(shown.id).then(setText, (e) => setError(String(e)));
-  }, [shown.id]);
-  if (error) return <Fallback shown={shown} />;
-  return <pre className="look-text">{text ?? ''}</pre>;
-}
+import { ArchiveView } from './ArchiveView';
+import { FolderView } from './FolderView';
+import { TextView } from './TextView';
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
 function Fallback({ shown }: { shown: Shown }) {
   const { t } = useTranslation();
   return (
     <div className="look-fallback">
-      <FileIcon name={shown.name} isDir={shown.kind === 'folder'} />
+      <FileIcon name={shown.name} isDir={shown.kind === 'folder'} big />
       <b>{shown.name}</b>
       <span>{formatSize(shown.size)}</span>
       <button type="button" className="btn primary" onClick={() => void api.openDefault()}>
@@ -33,32 +26,71 @@ function Fallback({ shown }: { shown: Shown }) {
   );
 }
 
-export function Preview({ shown }: { shown: Shown }) {
+function HexView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
+  const { t } = useTranslation();
+  const [h, setH] = useState<HexPreview | null>(null);
+  useEffect(() => {
+    let gone = false;
+    void api.readHex(shown.id).then((r) => !gone && setH(r));
+    return () => {
+      gone = true;
+    };
+  }, [shown.id]);
+  useEffect(() => {
+    if (h) onMeta(h.truncated ? t('hex.first') : t('hex.binary'));
+  }, [h, onMeta, t]);
+  return <pre className="look-hex">{h?.dump ?? ''}</pre>;
+}
+
+function ImageView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Fallback shown={shown} />;
+  return (
+    <div className="look-image">
+      {/* An SVG as an <img> runs no script and loads nothing from elsewhere. */}
+      <img
+        src={shown.url}
+        alt={shown.name}
+        draggable={false}
+        onLoad={(e) => onMeta(`${e.currentTarget.naturalWidth} × ${e.currentTarget.naturalHeight}`)}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
+function MediaView({ shown, video }: { shown: Shown; video: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Fallback shown={shown} />;
+  return (
+    <div className="look-media">
+      {video ? (
+        <video src={shown.url} controls autoPlay onError={() => setFailed(true)} />
+      ) : (
+        <audio src={shown.url} controls autoPlay onError={() => setFailed(true)} />
+      )}
+    </div>
+  );
+}
+
+export function Preview({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
   switch (shown.kind) {
     case 'text':
-      return <TextPreview shown={shown} />;
+      return <TextView shown={shown} onMeta={onMeta} />;
     case 'image':
     case 'svg':
-      // An SVG as an <img> runs no script and loads nothing from elsewhere.
-      return (
-        <div className="look-image">
-          <img src={shown.url} alt={shown.name} draggable={false} />
-        </div>
-      );
+      return <ImageView shown={shown} onMeta={onMeta} />;
     case 'pdf':
       return <iframe className="look-frame" src={shown.url} title={shown.name} />;
     case 'video':
-      return (
-        <div className="look-media">
-          <video src={shown.url} controls autoPlay />
-        </div>
-      );
     case 'audio':
-      return (
-        <div className="look-media">
-          <audio src={shown.url} controls autoPlay />
-        </div>
-      );
+      return <MediaView shown={shown} video={shown.kind === 'video'} />;
+    case 'archive':
+      return <ArchiveView shown={shown} onMeta={onMeta} />;
+    case 'folder':
+      return <FolderView shown={shown} onMeta={onMeta} />;
+    case 'binary':
+      return <HexView shown={shown} onMeta={onMeta} />;
     default:
       return <Fallback shown={shown} />;
   }

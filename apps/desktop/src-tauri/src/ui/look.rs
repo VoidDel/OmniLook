@@ -48,6 +48,8 @@ pub fn mime(path: &Path) -> &'static str {
         "webp" => "image/webp",
         "bmp" => "image/bmp",
         "ico" => "image/x-icon",
+        "svg" => "image/svg+xml",
+        "avif" => "image/avif",
         "mp4" | "m4v" => "video/mp4",
         "webm" => "video/webm",
         "mkv" => "video/x-matroska",
@@ -79,6 +81,17 @@ fn range(req: &Request<Vec<u8>>) -> Option<(u64, Option<u64>)> {
 }
 
 fn respond(path: &Path, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
+    // Images the WebView cannot decode come as PNG.
+    if omnilook_core::image::needs_conversion(path) {
+        return match omnilook_core::image::to_png(path) {
+            Ok(png) => Response::builder()
+                .header("Content-Type", "image/png")
+                .header("Cache-Control", "no-store")
+                .body(png)
+                .expect("response"),
+            Err(_) => status(StatusCode::UNSUPPORTED_MEDIA_TYPE),
+        };
+    }
     let Ok(mut f) = File::open(path) else {
         return status(StatusCode::NOT_FOUND);
     };

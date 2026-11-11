@@ -5,7 +5,11 @@
   },
   "view": {
     "openDefault": "既定のアプリで開く",
-    "openDefaultHint": "既定のアプリで開く（Ctrl+Enter）"
+    "openDefaultHint": "既定のアプリで開く（Ctrl+Enter）",
+    "plainText": "プレーンテキスト",
+    "lines": "{count, plural, other {# 行}}",
+    "truncated": "先頭部分のみ表示しています",
+    "loading": "読み込み中…"
   },
   "settings": {
     "title": "Omni Look の設定",
@@ -24,5 +28,22 @@
     "modeDark": "ダーク",
     "lightTheme": "ライトテーマ",
     "darkTheme": "ダークテーマ"
+  },
+  "archive": {
+    "summary": "ファイル {files} 個、フォルダー {folders} 個、合計 {size}",
+    "encrypted": "暗号化",
+    "truncated": "項目が多すぎるため最初の 20000 項目のみ表示しています",
+    "passwordRequired": "ファイル名が暗号化されています。表示にはパスワードが必要です",
+    "error": "このアーカイブは読み込めません",
+    "folderFiles": "{count, plural, other {# 個のファイル}}"
+  },
+  "folder": {
+    "summary": "ファイル {files} 個、フォルダー {folders} 個、合計 {size}",
+    "atLeast": "少なくとも {summary}",
+    "empty": "空のフォルダー"
+  },
+  "hex": {
+    "binary": "バイナリファイル",
+    "first": "バイナリファイル（先頭 4 KB を表示）"
   }
 }
