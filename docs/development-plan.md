@@ -246,7 +246,7 @@ Omni Look 安装时写入：
 ```
 HKCU\Software\OmniLook
   InstallPath      REG_SZ     安装目录
-  ProtocolVersion  REG_DWORD  调用协议版本（当前 1）
+  ProtocolVersion  REG_DWORD  调用协议版本（当前 2，§6.3）
 ```
 
 另登记 `App Paths\omnilook.exe`，便于其他程序与"运行"对话框调用。OmniZip 读到 `ProtocolVersion ≥ 1` 即认为可用。
