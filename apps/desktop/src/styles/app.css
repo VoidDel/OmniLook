@@ -83,7 +83,10 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-media audio { width: min(560px, 90%); }
 
 /* Markdown, rendered (the HTML is cleaned in Rust; colours from the theme). */
-.look-actions .seg { height: 26px; font-size: .8rem; }
+/* The rendered / source switch, sized for the title bar: the buttons shrink, the frame (2 px
+   padding and a border) wraps them, so nothing spills out of it. */
+.look-actions .seg { align-self: center; flex-wrap: nowrap; }
+.look-actions .seg button { height: 22px; padding: 0 10px; font-size: .8rem; }
 .look-md-scroll { overflow: auto; user-select: text; }
 .look-md {
   max-width: 860px; margin: 0 auto; padding: 24px 32px 48px; font-size: .95rem; line-height: 1.65;
