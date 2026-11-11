@@ -172,6 +172,21 @@ fn range(req: &Request<Vec<u8>>) -> Option<(u64, Option<u64>)> {
 }
 
 fn respond(path: &Path, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
+    // HEIC / HEIF: decoded by Windows (the HEIF extension), sent as PNG.
+    if omnilook_core::image::system_decoded(path) {
+        return match omnilook_win::wic::decode(path, omnilook_core::image::MAX_SIDE)
+            .map_err(|e| e.to_string())
+            .and_then(|i| {
+                omnilook_core::image::rgba_to_png(i.width, i.height, i.pixels, i.orientation)
+            }) {
+            Ok(png) => Response::builder()
+                .header("Content-Type", "image/png")
+                .header("Cache-Control", "no-store")
+                .body(png)
+                .expect("response"),
+            Err(_) => status(StatusCode::UNSUPPORTED_MEDIA_TYPE),
+        };
+    }
     // Images the WebView cannot decode come as PNG.
     if omnilook_core::image::needs_conversion(path) {
         return match omnilook_core::image::to_png(path) {

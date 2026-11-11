@@ -4,6 +4,8 @@
 
 use std::{io::Cursor, path::Path};
 
+use image::{DynamicImage, RgbaImage};
+
 /// Larger images are scaled down to this side first.
 pub const MAX_SIDE: u32 = 4096;
 /// Images claiming more than this per side are refused before decoding.
@@ -14,6 +16,38 @@ pub fn needs_conversion(path: &Path) -> bool {
     path.extension()
         .map(|e| e.to_string_lossy().to_ascii_lowercase())
         .is_some_and(|e| e == "tif" || e == "tiff")
+}
+
+/// Images the system decodes (HEIC / HEIF, `omnilook-win::wic`), not this crate.
+pub fn system_decoded(path: &Path) -> bool {
+    path.extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .is_some_and(|e| e == "heic" || e == "heif" || e == "hif")
+}
+
+/// RGBA pixels decoded elsewhere, turned upright (EXIF `orientation` 1–8) and encoded as PNG.
+pub fn rgba_to_png(
+    width: u32,
+    height: u32,
+    pixels: Vec<u8>,
+    orientation: u16,
+) -> Result<Vec<u8>, String> {
+    let img = RgbaImage::from_raw(width, height, pixels).ok_or("bad pixel buffer")?;
+    let img = DynamicImage::ImageRgba8(img);
+    let img = match orientation {
+        2 => img.fliph(),
+        3 => img.rotate180(),
+        4 => img.flipv(),
+        5 => img.rotate90().fliph(),
+        6 => img.rotate90(),
+        7 => img.rotate270().fliph(),
+        8 => img.rotate270(),
+        _ => img,
+    };
+    let mut png = Vec::new();
+    img.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)
+        .map_err(|e| e.to_string())?;
+    Ok(png)
 }
 
 pub fn to_png(path: &Path) -> Result<Vec<u8>, String> {

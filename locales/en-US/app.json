@@ -21,7 +21,8 @@
     "handler": "System preview handler",
     "noHandler": "No preview handler is installed for this type",
     "handlerFailed": "The preview handler could not show this file",
-    "handlerTimeout": "The preview handler did not respond"
+    "handlerTimeout": "The preview handler did not respond",
+    "heifNeeded": "Previewing HEIC needs \"HEIF Image Extensions\" from the Microsoft Store"
   },
   "settings": {
     "title": "Omni Look Settings",

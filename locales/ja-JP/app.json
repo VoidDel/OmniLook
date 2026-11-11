@@ -21,7 +21,8 @@
     "handler": "システムのプレビューハンドラー",
     "noHandler": "この種類のプレビューハンドラーがありません",
     "handlerFailed": "プレビューハンドラーがこのファイルを表示できませんでした",
-    "handlerTimeout": "プレビューハンドラーが応答しません"
+    "handlerTimeout": "プレビューハンドラーが応答しません",
+    "heifNeeded": "HEIC のプレビューには Microsoft Store の「HEIF 画像拡張機能」が必要です"
   },
   "settings": {
     "title": "Omni Look の設定",

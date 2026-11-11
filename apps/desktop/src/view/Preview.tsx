@@ -17,13 +17,14 @@ import { OfficeView } from './OfficeView';
 import { TextView } from './TextView';
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
-function Fallback({ shown }: { shown: Shown }) {
+function Fallback({ shown, note }: { shown: Shown; note?: string }) {
   const { t } = useTranslation();
   return (
     <div className="look-fallback">
       <FileIcon name={shown.name} isDir={shown.kind === 'folder'} big />
       <b>{shown.name}</b>
       <span>{formatSize(shown.size)}</span>
+      {note && <span className="look-fallback-note">{note}</span>}
       <button type="button" className="btn primary" onClick={() => void api.openDefault()}>
         {t('view.openDefault')}
       </button>
@@ -48,8 +49,10 @@ function HexView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => vo
 }
 
 function ImageView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
+  const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
-  if (failed) return <Fallback shown={shown} />;
+  // HEIC is decoded by Windows' HEIF extension: when that fails, it is most likely missing.
+  if (failed) return <Fallback shown={shown} note={/.(heic|heif|hif)$/i.test(shown.name) ? t('view.heifNeeded') : undefined} />;
   return (
     <div className="look-image">
       {/* An SVG as an <img> runs no script and loads nothing from elsewhere. */}

@@ -21,7 +21,8 @@
     "handler": "系统预览程序",
     "noHandler": "系统里没有这种文件的预览程序",
     "handlerFailed": "预览程序无法显示这个文件",
-    "handlerTimeout": "预览程序没有响应"
+    "handlerTimeout": "预览程序没有响应",
+    "heifNeeded": "需要从 Microsoft Store 安装\"HEIF 图像扩展\"才能预览 HEIC 图片"
   },
   "settings": {
     "title": "Omni Look 设置",

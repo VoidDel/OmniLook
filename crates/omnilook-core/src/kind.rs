@@ -152,7 +152,8 @@ const TEXT: &[&str] = &[
 ];
 const MARKDOWN: &[&str] = &["md", "markdown", "mdown", "mkd", "mkdn"];
 const IMAGE: &[&str] = &[
-    "png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "ico", "tif", "tiff",
+    "png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "ico", "tif", "tiff", "avif", "heic",
+    "heif", "hif",
 ];
 const VIDEO: &[&str] = &[
     "mp4", "m4v", "mkv", "webm", "mov", "avi", "wmv", "ogv", "ts", "m2ts", "mts", "3gp", "flv",
