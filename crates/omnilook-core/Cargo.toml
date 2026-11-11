@@ -14,6 +14,7 @@ ammonia = "4.2.4"
 chardetng = "1.0.0"
 encoding_rs = "0.8.44"
 image = { version = "0.25.10", default-features = false, features = ["png", "tiff"] }
+lofty = "0.25.5"
 omnizip-formats = { git = "https://github.com/VoidDel/OmniZip", rev = "017ca0d287f54047a84d657f5ba3ee2827ab10f8", version = "0.1.0" }
 pulldown-cmark = { version = "0.13.6", default-features = false, features = ["html"] }
 serde.workspace = true

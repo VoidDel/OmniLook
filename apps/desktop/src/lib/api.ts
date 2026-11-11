@@ -17,6 +17,22 @@ export interface Shown {
   modified: number | null;
   /** The file through look://, for images, PDF and media. */
   url: string;
+  /** Media the window can play (AVI, WMV, WMA… cannot). */
+  playable: boolean;
+}
+
+/** A sound file's tags and format (crates/omnilook-core/src/audio.rs). */
+export interface AudioInfo {
+  title: string | null;
+  artist: string | null;
+  album: string | null;
+  durationMs: number | null;
+  /** kbit/s. */
+  bitrate: number | null;
+  sampleRate: number | null;
+  channels: number | null;
+  /** The cover is at the file's URL with /c/ for /f/. */
+  hasCover: boolean;
 }
 
 export type ThemeMode = 'system' | 'light' | 'dark';
@@ -103,6 +119,7 @@ export const api = {
   /** Flat [start, length, class] triples in UTF-16 units. */
   highlight: (id: number) => invoke<number[]>('highlight', { id }),
   readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
+  readAudio: (id: number) => invoke<AudioInfo>('read_audio', { id }),
   readMarkdown: (id: number) => invoke<MarkdownPreview>('read_markdown', { id }),
   /** A link from a preview: web and mail addresses only (refused otherwise). */
   openUrl: (url: string) => invoke<boolean>('open_url', { url }),

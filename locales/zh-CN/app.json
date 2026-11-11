@@ -12,7 +12,12 @@
     "loading": "正在读取…",
     "mode": "显示方式",
     "rendered": "渲染",
-    "source": "源码"
+    "source": "源码",
+    "mono": "单声道",
+    "stereo": "立体声",
+    "channels": "{count} 声道",
+    "cannotPlay": "预览中无法播放这种格式",
+    "playFailed": "无法播放这个文件"
   },
   "settings": {
     "title": "Omni Look 设置",

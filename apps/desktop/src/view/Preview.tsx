@@ -10,6 +10,7 @@ import { formatSize } from '../lib/format';
 import { ArchiveView } from './ArchiveView';
 import { FolderView } from './FolderView';
 import { MarkdownView } from './MarkdownView';
+import { MediaView } from './MediaView';
 import { TextView } from './TextView';
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
@@ -60,21 +61,6 @@ function ImageView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => 
   );
 }
 
-function MediaView({ shown, video }: { shown: Shown; video: boolean }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <Fallback shown={shown} />;
-  return (
-    <div className="look-media">
-      {video ? (
-        <video src={shown.url} controls autoPlay onError={() => setFailed(true)} />
-      ) : (
-        <audio src={shown.url} controls autoPlay onError={() => setFailed(true)} />
-      )}
-    </div>
-  );
-}
-
-/** Kinds with a rendered view and a source view (the title bar switches). */
 export const HAS_SOURCE: Shown['kind'][] = ['markdown', 'svg'];
 
 export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta: string) => void; source: boolean }) {
@@ -91,7 +77,7 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
       return <iframe className="look-frame" src={shown.url} title={shown.name} />;
     case 'video':
     case 'audio':
-      return <MediaView shown={shown} video={shown.kind === 'video'} />;
+      return <MediaView shown={shown} onMeta={onMeta} />;
     case 'archive':
       return <ArchiveView shown={shown} onMeta={onMeta} />;
     case 'folder':

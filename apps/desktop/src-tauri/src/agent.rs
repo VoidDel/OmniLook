@@ -277,7 +277,8 @@ impl Agent {
 
     /// Shows `path`: in the running preview when it has the right GPU mode, else in a new one.
     fn show(&mut self, path: PathBuf, title: Option<String>, anchor: Option<HWND>) {
-        let gpu = detect(&path).wants_gpu();
+        // Video that cannot be played here shows its details only: no GPU needed.
+        let gpu = detect(&path).wants_gpu() && omnilook_core::audio::playable(&path);
         if let Some(v) = &mut self.view
             && v.gpu == gpu
         {

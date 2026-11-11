@@ -22,6 +22,21 @@ const WHOLE: u64 = 512 << 20;
 pub fn serve(app: &AppHandle, req: Request<Vec<u8>>, responder: UriSchemeResponder) {
     let state = app.state::<ViewState>();
     let uri = req.uri().path();
+    // A sound file's cover picture: `/c/<token>`.
+    if let Some(token) = uri.strip_prefix("/c/") {
+        let path = state.path_for(token.trim_end_matches('/'));
+        std::thread::spawn(move || {
+            responder.respond(match path.and_then(|p| omnilook_core::audio::cover(&p)) {
+                Some((data, mime)) => Response::builder()
+                    .header("Content-Type", mime)
+                    .header("Cache-Control", "no-store")
+                    .body(data)
+                    .expect("response"),
+                None => status(StatusCode::NOT_FOUND),
+            })
+        });
+        return;
+    }
     let path = if let Some(rest) = uri.strip_prefix("/f/") {
         rest.split('/')
             .next()

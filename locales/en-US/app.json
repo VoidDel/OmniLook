@@ -12,7 +12,12 @@
     "loading": "Reading…",
     "mode": "View",
     "rendered": "Rendered",
-    "source": "Source"
+    "source": "Source",
+    "mono": "Mono",
+    "stereo": "Stereo",
+    "channels": "{count} channels",
+    "cannotPlay": "This format cannot be played in the preview",
+    "playFailed": "This file could not be played"
   },
   "settings": {
     "title": "Omni Look Settings",

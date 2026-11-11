@@ -16,3 +16,13 @@ export function formatDate(ms: number | null, lang: string): string {
   if (ms == null) return '';
   return new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(ms));
 }
+
+/** `3:07`, `1:02:45`. */
+export function formatDuration(ms: number): string {
+  // Whole seconds gone by, as players count.
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}

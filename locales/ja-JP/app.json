@@ -12,7 +12,12 @@
     "loading": "読み込み中…",
     "mode": "表示",
     "rendered": "レンダリング",
-    "source": "ソース"
+    "source": "ソース",
+    "mono": "モノラル",
+    "stereo": "ステレオ",
+    "channels": "{count} チャンネル",
+    "cannotPlay": "この形式はプレビューで再生できません",
+    "playFailed": "このファイルを再生できませんでした"
   },
   "settings": {
     "title": "Omni Look の設定",

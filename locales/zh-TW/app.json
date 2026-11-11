@@ -12,7 +12,12 @@
     "loading": "正在讀取…",
     "mode": "顯示方式",
     "rendered": "渲染",
-    "source": "原始碼"
+    "source": "原始碼",
+    "mono": "單聲道",
+    "stereo": "立體聲",
+    "channels": "{count} 聲道",
+    "cannotPlay": "預覽中無法播放這種格式",
+    "playFailed": "無法播放這個檔案"
   },
   "settings": {
     "title": "Omni Look 設定",

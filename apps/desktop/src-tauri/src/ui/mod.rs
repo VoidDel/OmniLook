@@ -14,7 +14,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use omnilook_core::{Kind, archive, detect, folder, hex, markdown, text};
+use omnilook_core::{Kind, archive, audio, detect, folder, hex, markdown, text};
 use omnilook_win::{events::window_rect, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -48,6 +48,8 @@ pub struct Shown {
     modified: Option<u64>,
     /// The file through `look://`, for images, PDF and media.
     url: String,
+    /// Media the window can play (`audio::UNPLAYABLE` cannot).
+    playable: bool,
 }
 
 struct Current {
@@ -91,6 +93,7 @@ impl ViewState {
                 .unwrap_or_else(|| path.to_string_lossy().into_owned()),
             title,
             kind: detect(&path),
+            playable: audio::playable(&path),
             size: meta.as_ref().map(|m| m.len()).unwrap_or(0),
             modified: meta
                 .and_then(|m| m.modified().ok())
@@ -309,6 +312,17 @@ async fn read_markdown(
     .await
 }
 
+/// Tags, length and format of a sound file (and whether it has a cover, served at
+/// `look://`'s `/c/<token>`).
+#[tauri::command]
+async fn read_audio(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<audio::AudioInfo, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || Ok(audio::read(&path))).await
+}
+
 /// A link clicked in a preview: web and mail addresses only.
 #[tauri::command]
 fn open_url(url: String) -> bool {
@@ -416,6 +430,7 @@ fn run(role: Role) -> ExitCode {
             read_folder,
             read_archive,
             read_markdown,
+            read_audio,
             open_url,
             get_settings,
             save_settings,
