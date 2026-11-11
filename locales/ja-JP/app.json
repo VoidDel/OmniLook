@@ -9,7 +9,10 @@
     "plainText": "プレーンテキスト",
     "lines": "{count, plural, other {# 行}}",
     "truncated": "先頭部分のみ表示しています",
-    "loading": "読み込み中…"
+    "loading": "読み込み中…",
+    "mode": "表示",
+    "rendered": "レンダリング",
+    "source": "ソース"
   },
   "settings": {
     "title": "Omni Look の設定",

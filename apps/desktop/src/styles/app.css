@@ -1,5 +1,12 @@
 /* Omni Look's own styles; tokens, base and components come from omni-ui. */
 
+/* omni-ui's monospace stack with CJK faces before the generic family, which on Windows would
+   otherwise give Chinese and Japanese in code the SimSun / MS Gothic bitmap look. */
+:root {
+  --look-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono",
+    "Microsoft YaHei UI", "Microsoft JhengHei UI", "Yu Gothic UI", "PingFang SC", monospace;
+}
+
 html, body, #root { height: 100%; margin: 0; }
 body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden; }
 
@@ -27,7 +34,7 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .ellipsis { overflow: hidden; text-overflow: ellipsis; }
 
 /* Text: absolutely placed lines (only those on screen exist), a line-number gutter. */
-.look-text { overflow: auto; font: 13px/20px var(--font-mono, Consolas, monospace); padding: 8px 0; outline: 0; user-select: text; }
+.look-text { overflow: auto; font: 13px/20px var(--look-mono); padding: 8px 0; outline: 0; user-select: text; }
 .look-text .tl { position: absolute; left: 0; top: 0; height: 20px; white-space: pre; tab-size: 4; padding-right: 16px; }
 .look-text .ln { display: inline-block; text-align: right; color: var(--fg-muted); padding: 0 14px 0 12px; box-sizing: content-box; user-select: none; }
 /* Token classes (crates/omnilook-core/src/text.rs `Class`). */
@@ -47,7 +54,7 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 :root[data-appearance="dark"] .tk6 { color: #5FD4D4; }
 :root[data-appearance="dark"] .tk8 { color: #FF8A80; }
 :root[data-appearance="dark"] .tk9 { color: #E8C266; }
-.look-hex { margin: 0; padding: 12px 16px; overflow: auto; font: 13px/20px var(--font-mono, Consolas, monospace); user-select: text; }
+.look-hex { margin: 0; padding: 12px 16px; overflow: auto; font: 13px/20px var(--look-mono); user-select: text; }
 .look-note { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--fg-secondary); }
 .look-note .ic { width: 18px; height: 18px; }
 
@@ -74,6 +81,41 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-media { display: flex; align-items: center; justify-content: center; background: #000; }
 .look-media video { max-width: 100%; max-height: 100%; }
 .look-media audio { width: min(560px, 90%); }
+
+/* Markdown, rendered (the HTML is cleaned in Rust; colours from the theme). */
+.look-actions .seg { height: 26px; font-size: .8rem; }
+.look-md-scroll { overflow: auto; user-select: text; }
+.look-md {
+  max-width: 860px; margin: 0 auto; padding: 24px 32px 48px; font-size: .95rem; line-height: 1.65;
+  color: var(--fg-primary); overflow-wrap: break-word;
+}
+.look-md > :first-child { margin-top: 0; }
+.look-md :is(h1, h2, h3, h4, h5, h6) { margin: 1.4em 0 .6em; line-height: 1.3; font-weight: 650; scroll-margin-top: 12px; }
+.look-md h1 { font-size: 1.85em; padding-bottom: .3em; border-bottom: 1px solid var(--border-subtle); }
+.look-md h2 { font-size: 1.45em; padding-bottom: .25em; border-bottom: 1px solid var(--border-subtle); }
+.look-md h3 { font-size: 1.2em; }
+.look-md h4 { font-size: 1.05em; }
+.look-md :is(h5, h6) { font-size: .95em; color: var(--fg-secondary); }
+.look-md :is(p, ul, ol, blockquote, pre, table, details) { margin: 0 0 1em; }
+.look-md :is(ul, ol) { padding-left: 1.8em; }
+.look-md li + li { margin-top: .25em; }
+.look-md li > input[type="checkbox"] { margin: 0 .45em 0 -1.3em; vertical-align: middle; }
+.look-md ul:has(> li > input[type="checkbox"]) { list-style: none; }
+.look-md a { color: var(--accent); text-decoration: none; }
+.look-md a:hover { text-decoration: underline; }
+.look-md img { max-width: 100%; border-radius: 4px; }
+.look-md hr { border: 0; border-top: 1px solid var(--border-default, var(--border-subtle)); margin: 1.6em 0; }
+.look-md blockquote { margin-left: 0; padding: .1em 1em; color: var(--fg-secondary); border-left: 3px solid var(--border-default, var(--border-subtle)); }
+.look-md code { font: .88em/1.5 var(--look-mono); background: var(--bg-subtle, rgba(127, 127, 127, .12)); padding: .15em .4em; border-radius: 4px; }
+.look-md pre { background: var(--bg-subtle, rgba(127, 127, 127, .1)); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px 14px; overflow: auto; }
+.look-md pre code { background: none; padding: 0; font-size: 13px; line-height: 20px; white-space: pre; tab-size: 4; }
+.look-md table { border-collapse: collapse; display: block; max-width: 100%; overflow: auto; }
+.look-md :is(th, td) { border: 1px solid var(--border-default, var(--border-subtle)); padding: 6px 12px; }
+.look-md th { font-weight: 600; background: var(--bg-subtle, transparent); }
+.look-md tr:nth-child(2n) td { background: var(--bg-hover, transparent); }
+.look-md .footnote-definition { font-size: .88em; color: var(--fg-secondary); display: flex; gap: .4em; margin-top: .4em; }
+.look-md .footnote-definition:first-of-type { border-top: 1px solid var(--border-subtle); padding-top: .8em; }
+.look-md .footnote-definition p { margin: 0; }
 
 .look-fallback {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;

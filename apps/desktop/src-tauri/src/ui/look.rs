@@ -21,18 +21,90 @@ const WHOLE: u64 = 512 << 20;
 
 pub fn serve(app: &AppHandle, req: Request<Vec<u8>>, responder: UriSchemeResponder) {
     let state = app.state::<ViewState>();
-    let path = req
-        .uri()
-        .path()
-        .strip_prefix("/f/")
-        .and_then(|rest| rest.split('/').next())
-        .and_then(|token| state.path_for(token));
+    let uri = req.uri().path();
+    let path = if let Some(rest) = uri.strip_prefix("/f/") {
+        rest.split('/')
+            .next()
+            .and_then(|token| state.path_for(token))
+    } else if let Some(rest) = uri.strip_prefix("/r/") {
+        // An image a Markdown file shows: `/r/<token>/<its address, encoded>`.
+        rest.split_once('/').and_then(|(token, dest)| {
+            let md = state.path_for(token)?;
+            local_image(&md, &decode(dest))
+        })
+    } else {
+        None
+    };
     std::thread::spawn(move || {
         responder.respond(match path {
             Some(p) => respond(&p, &req),
             None => status(StatusCode::NOT_FOUND),
         })
     });
+}
+
+/// Percent-encodes everything but the unreserved characters (an address inside a URL path).
+pub fn encode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.' | b'_' | b'~') {
+            out.push(b as char);
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+    }
+    out
+}
+
+/// Undoes percent-encoding; a bad escape is kept as it is.
+pub fn decode(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = Vec::with_capacity(b.len());
+    let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%'
+            && let Some(v) = s
+                .get(i + 1..i + 3)
+                .and_then(|h| u8::from_str_radix(h, 16).ok())
+        {
+            out.push(v);
+            i += 3;
+        } else {
+            out.push(b[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+const IMAGES: &[&str] = &[
+    "png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "ico", "svg", "avif", "tif", "tiff",
+];
+
+/// The image file that `dest` (as written in the Markdown file `md`) names: relative to the
+/// file's folder, or a full path, or a `file:` URL; its own `%20`-style escapes undone when that
+/// names a file. Only images: a Markdown file cannot make the window read anything else.
+pub fn local_image(md: &Path, dest: &str) -> Option<std::path::PathBuf> {
+    let dest = dest.split(['?', '#']).next().unwrap_or_default();
+    let dest = dest
+        .strip_prefix("file:///")
+        .or_else(|| dest.strip_prefix("file://"))
+        .unwrap_or(dest);
+    let base = md.parent()?;
+    let candidates = [decode(dest), dest.to_owned()];
+    candidates.iter().find_map(|d| {
+        let p = Path::new(d.trim_start_matches(['/', '\\']));
+        let p = if Path::new(d).is_absolute() {
+            Path::new(d).to_path_buf()
+        } else {
+            base.join(p)
+        };
+        let ext = p
+            .extension()
+            .map(|e| e.to_string_lossy().to_ascii_lowercase())
+            .unwrap_or_default();
+        (IMAGES.contains(&ext.as_str()) && p.is_file()).then_some(p)
+    })
 }
 
 pub fn mime(path: &Path) -> &'static str {
@@ -124,4 +196,28 @@ fn respond(path: &Path, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
         b = b.header("Content-Range", format!("bytes {start}-{end}/{len}"));
     }
     b.body(body).expect("response")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn addresses_round_trip_and_only_images_are_served() {
+        let s = "img/a b%20c.png?raw=1#x";
+        assert_eq!(decode(&encode(s)), s);
+        let d = std::env::temp_dir().join(format!("omnilook-look-{}", std::process::id()));
+        std::fs::create_dir_all(d.join("img")).unwrap();
+        let md = d.join("README.md");
+        std::fs::write(&md, "# x").unwrap();
+        std::fs::write(d.join("img").join("a b.png"), b"png").unwrap();
+        std::fs::write(d.join("secret.txt"), b"no").unwrap();
+        let want = d.join("img").join("a b.png");
+        assert_eq!(local_image(&md, "img/a%20b.png"), Some(want.clone()));
+        assert_eq!(local_image(&md, "img/a b.png?raw=true"), Some(want.clone()));
+        assert_eq!(local_image(&md, "./img/a b.png"), Some(want));
+        assert_eq!(local_image(&md, "secret.txt"), None);
+        assert_eq!(local_image(&md, "missing.png"), None);
+        std::fs::remove_dir_all(&d).unwrap();
+    }
 }

@@ -4,14 +4,24 @@
 
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { FileIcon, Icon } from 'omni-ui';
+import { FileIcon, Icon, Segmented } from 'omni-ui';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, type Shown } from '../lib/api';
 import { formatDate, formatSize } from '../lib/format';
 import { nextFrame } from '../lib/frame';
-import { Preview } from './Preview';
+import { HAS_SOURCE, Preview } from './Preview';
+
+/** Rendered or source, kept for this viewer between previews (browser storage, best effort). */
+const SOURCE_KEY = 'omnilook.source';
+function loadSource(): boolean {
+  try {
+    return localStorage.getItem(SOURCE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 export function ViewApp() {
   const { t, i18n } = useTranslation();
@@ -20,6 +30,16 @@ export function ViewApp() {
   const [meta, setMeta] = useState('');
   const onMeta = useCallback((m: string) => setMeta(m), []);
   const firstPaint = useRef(false);
+  const [source, setSourceState] = useState(loadSource);
+  const setSource = (on: boolean) => {
+    setSourceState(on);
+    setMeta('');
+    try {
+      localStorage.setItem(SOURCE_KEY, on ? '1' : '0');
+    } catch {
+      /* not kept */
+    }
+  };
 
   // Listen first, then ask for the first file: a file sent before the listener is up is lost.
   useEffect(() => {
@@ -76,6 +96,17 @@ export function ViewApp() {
           <b data-tauri-drag-region>{name}</b>
         </div>
         <div className="look-actions">
+          {shown && HAS_SOURCE.includes(shown.kind) && (
+            <Segmented
+              value={source ? 'source' : 'rendered'}
+              label={t('view.mode')}
+              options={[
+                ['rendered', t('view.rendered')],
+                ['source', t('view.source')],
+              ]}
+              onChange={(m) => setSource(m === 'source')}
+            />
+          )}
           <button type="button" className="btn ghost" onClick={() => void api.openDefault()} title={t('view.openDefaultHint')}>
             <Icon name="external" />
             <span>{t('view.openDefault')}</span>
@@ -90,7 +121,7 @@ export function ViewApp() {
           </div>
         </div>
       </header>
-      <main className="look-body">{shown && <Preview key={shown.id} shown={shown} onMeta={onMeta} />}</main>
+      <main className="look-body">{shown && <Preview key={`${shown.id}-${source}`} shown={shown} onMeta={onMeta} source={source} />}</main>
       <footer className="look-status">
         {shown && (
           <>

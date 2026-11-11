@@ -162,11 +162,34 @@ pub fn highlight(path: &Path, text: &str) -> Vec<u32> {
     let Some(syntax) = syntax_for(set, path, text) else {
         return Vec::new();
     };
+    let mut out = Vec::new();
+    let mut at = 0u32; // UTF-16 offset of the piece
+    walk(set, syntax, text, |piece, class| {
+        let n = piece.encode_utf16().count() as u32;
+        // Line breaks get no class.
+        let vn = piece.trim_end_matches(['\n', '\r']).encode_utf16().count() as u32;
+        if vn > 0
+            && let Some(c) = class
+        {
+            out.extend_from_slice(&[at, vn, c as u32]);
+        }
+        at += n;
+    });
+    merge(out)
+}
+
+/// Hands `text` to `f` piece by piece with each piece's class, line by line, until the time budget
+/// runs out. Returns how many bytes were covered.
+fn walk(
+    set: &SyntaxSet,
+    syntax: &SyntaxReference,
+    text: &str,
+    mut f: impl FnMut(&str, Option<Class>),
+) -> usize {
     let start = Instant::now();
     let mut state = ParseState::new(syntax);
     let mut stack = ScopeStack::new();
-    let mut out = Vec::new();
-    let mut base = 0u32; // UTF-16 offset of the line
+    let mut covered = 0;
     for line in text.split_inclusive('\n') {
         if start.elapsed() > HIGHLIGHT_BUDGET {
             break;
@@ -175,33 +198,61 @@ pub fn highlight(path: &Path, text: &str) -> Vec<u32> {
             break;
         };
         let mut pos = 0usize; // byte offset in the line
-        let mut upos = 0u32; // UTF-16 offset in the line
-        let mut emit = |from: usize, to: usize, upos: &mut u32, stack: &ScopeStack| {
-            let piece = &line[from..to];
-            let n = piece.encode_utf16().count() as u32;
-            // Line breaks get no class.
-            let visible = piece.trim_end_matches(['\n', '\r']);
-            let vn = visible.encode_utf16().count() as u32;
-            if vn > 0
-                && let Some(c) = class_of(stack)
-            {
-                out.extend_from_slice(&[base + *upos, vn, c as u32]);
-            }
-            *upos += n;
-        };
         for (at, op) in ops {
             if at > pos {
-                emit(pos, at, &mut upos, &stack);
+                f(&line[pos..at], class_of(&stack));
                 pos = at;
             }
             let _ = stack.apply(&op);
         }
         if pos < line.len() {
-            emit(pos, line.len(), &mut upos, &stack);
+            f(&line[pos..], class_of(&stack));
         }
-        base += upos;
+        covered += line.len();
     }
-    merge(out)
+    covered
+}
+
+fn escape_html(s: &str, out: &mut String) {
+    for c in s.chars() {
+        match c {
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '&' => out.push_str("&amp;"),
+            '"' => out.push_str("&quot;"),
+            c => out.push(c),
+        }
+    }
+}
+
+/// `code` as escaped HTML with `<span class="tkN">` around each coloured piece, for a code block
+/// whose fence names `lang` (`rust`, `ts`, `toml`…). Plain escaped text when the language is not
+/// known or the code is too long.
+pub fn highlight_html(lang: &str, code: &str) -> String {
+    let mut out = String::with_capacity(code.len() + code.len() / 2);
+    let set = syntaxes();
+    let syntax = (!lang.is_empty() && code.len() <= MAX_HIGHLIGHT)
+        .then(|| {
+            set.find_syntax_by_token(lang)
+                .or_else(|| set.find_syntax_by_token(&lang.to_ascii_lowercase()))
+        })
+        .flatten()
+        .filter(|s| s.name != "Plain Text");
+    let Some(syntax) = syntax else {
+        escape_html(code, &mut out);
+        return out;
+    };
+    let covered = walk(set, syntax, code, |piece, class| match class {
+        Some(c) if !piece.trim().is_empty() => {
+            out.push_str(&format!("<span class=\"tk{}\">", c as u8));
+            escape_html(piece, &mut out);
+            out.push_str("</span>");
+        }
+        _ => escape_html(piece, &mut out),
+    });
+    // The budget ran out: the rest uncoloured.
+    escape_html(&code[covered..], &mut out);
+    out
 }
 
 /// Joins neighbouring ranges of the same class.

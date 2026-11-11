@@ -6,6 +6,7 @@ pub mod folder;
 pub mod hex;
 pub mod image;
 pub mod kind;
+pub mod markdown;
 pub mod text;
 
 pub use kind::{Kind, detect};

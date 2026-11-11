@@ -152,6 +152,26 @@ pub fn open_default(path: &Path) -> bool {
     r.0 as usize > 32
 }
 
+/// Opens a web or mail address from a preview (a link in Markdown) with the default browser or
+/// mail program. Anything else (`file:`, `javascript:`, a program path) is refused.
+pub fn open_url(url: &str) -> bool {
+    let l = url.trim().to_ascii_lowercase();
+    if !(l.starts_with("http://") || l.starts_with("https://") || l.starts_with("mailto:")) {
+        return false;
+    }
+    let r = unsafe {
+        ShellExecuteW(
+            None,
+            w!("open"),
+            &HSTRING::from(url.trim()),
+            PCWSTR::null(),
+            PCWSTR::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+    r.0 as usize > 32
+}
+
 pub fn terminate(pid: u32) {
     unsafe {
         if let Ok(h) = OpenProcess(PROCESS_TERMINATE, false, pid) {

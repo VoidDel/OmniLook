@@ -9,7 +9,10 @@
     "plainText": "純文字",
     "lines": "{count, plural, other {# 行}}",
     "truncated": "只顯示了開頭部分",
-    "loading": "正在讀取…"
+    "loading": "正在讀取…",
+    "mode": "顯示方式",
+    "rendered": "渲染",
+    "source": "原始碼"
   },
   "settings": {
     "title": "Omni Look 設定",

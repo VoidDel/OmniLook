@@ -14,7 +14,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use omnilook_core::{Kind, archive, detect, folder, hex, text};
+use omnilook_core::{Kind, archive, detect, folder, hex, markdown, text};
 use omnilook_win::{events::window_rect, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -111,6 +111,24 @@ impl ViewState {
     fn shown(&self) -> Option<Shown> {
         self.current.lock().ok()?.as_ref().map(|c| c.shown.clone())
     }
+
+    /// The path and token of the file shown, if it is still `id`.
+    fn token_of(&self, id: u64) -> Option<(PathBuf, String)> {
+        self.current
+            .lock()
+            .ok()?
+            .as_ref()
+            .filter(|c| c.shown.id == id)
+            .map(|c| (c.shown.path.clone(), c.token.clone()))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MarkdownPreview {
+    html: String,
+    truncated: bool,
+    encoding: String,
 }
 
 /// `--disable-gpu` halves WebView2's memory; only video needs the GPU (M0, `docs/m0-results.md`).
@@ -266,6 +284,37 @@ async fn highlight(id: u64, state: tauri::State<'_, ViewState>) -> Result<Vec<u3
     .await
 }
 
+/// Markdown rendered and cleaned (`markdown::render`); its local images come from `look://`'s
+/// `/r/<token>/<address>`, which serves only images, next to this file.
+#[tauri::command]
+async fn read_markdown(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<MarkdownPreview, String> {
+    let (path, token) = state.token_of(id).ok_or("stale")?;
+    blocking(move || {
+        let t = text::read(&path).map_err(|e| e.to_string())?;
+        let html = markdown::render(&t.text, |dest| {
+            Some(format!(
+                "http://look.localhost/r/{token}/{}",
+                look::encode(dest)
+            ))
+        });
+        Ok(MarkdownPreview {
+            html,
+            truncated: t.truncated,
+            encoding: t.encoding,
+        })
+    })
+    .await
+}
+
+/// A link clicked in a preview: web and mail addresses only.
+#[tauri::command]
+fn open_url(url: String) -> bool {
+    system::open_url(&url)
+}
+
 #[tauri::command]
 async fn read_hex(id: u64, state: tauri::State<'_, ViewState>) -> Result<hex::HexPreview, String> {
     let path = path_of(&state, id)?;
@@ -325,8 +374,7 @@ fn run(role: Role) -> ExitCode {
     let gpu = matches!(&role, Role::View(a) if a.gpu);
     let mut builder = tauri::Builder::default();
     if let Role::View(args) = &role {
-        let pipe_name =
-            pipe::pipe_name(&format!("view-{}", std::process::id())).unwrap_or_default();
+        let pipe_name = paths::pipe(&format!("view-{}", std::process::id())).unwrap_or_default();
         let state = ViewState {
             current: Mutex::new(None),
             next: AtomicU64::new(0),
@@ -367,6 +415,8 @@ fn run(role: Role) -> ExitCode {
             read_hex,
             read_folder,
             read_archive,
+            read_markdown,
+            open_url,
             get_settings,
             save_settings,
             app_version
@@ -456,7 +506,7 @@ fn serve_view_pipe(app: AppHandle) {
 
 /// A second "open settings" brings this window to the front.
 fn serve_settings_pipe(app: AppHandle) {
-    let Ok(name) = pipe::pipe_name("settings") else {
+    let Ok(name) = paths::pipe("settings") else {
         return;
     };
     let handler: pipe::Handler = Arc::new(move |_line: String| {
@@ -481,7 +531,7 @@ pub fn run_settings() -> ExitCode {
 /// Asks a running settings window to come forward (it may take the focus: we were just started
 /// by the user).
 pub fn focus_existing_settings() -> bool {
-    let Ok(name) = pipe::pipe_name("settings") else {
+    let Ok(name) = paths::pipe("settings") else {
         return false;
     };
     unsafe {

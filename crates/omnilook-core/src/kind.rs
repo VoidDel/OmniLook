@@ -10,6 +10,8 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 pub enum Kind {
     Text,
+    /// Rendered (with a source view).
+    Markdown,
     Image,
     Svg,
     Pdf,
@@ -31,8 +33,6 @@ impl Kind {
 
 const TEXT: &[&str] = &[
     "txt",
-    "md",
-    "markdown",
     "rst",
     "log",
     "csv",
@@ -146,6 +146,7 @@ const TEXT: &[&str] = &[
     "props",
     "targets",
 ];
+const MARKDOWN: &[&str] = &["md", "markdown", "mdown", "mkd", "mkdn"];
 const IMAGE: &[&str] = &[
     "png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "ico", "tif", "tiff",
 ];
@@ -221,6 +222,8 @@ pub fn detect(path: &Path) -> Kind {
     let e = ext.as_str();
     let by_ext = if TEXT.contains(&e) {
         Some(Kind::Text)
+    } else if MARKDOWN.contains(&e) {
+        Some(Kind::Markdown)
     } else if e == "svg" {
         Some(Kind::Svg)
     } else if e == "pdf" {
@@ -241,6 +244,7 @@ pub fn detect(path: &Path) -> Kind {
     // Media, documents and archives by name: their own previewers check the content.
     if let Some(k) = by_ext
         && k != Kind::Text
+        && k != Kind::Markdown
     {
         return k;
     }
@@ -252,7 +256,9 @@ pub fn detect(path: &Path) -> Kind {
     if let Some(k) = sniff(&head) {
         return k;
     }
-    if by_ext == Some(Kind::Text) || looks_like_text(&head) {
+    if by_ext == Some(Kind::Markdown) && looks_like_text(&head) {
+        Kind::Markdown
+    } else if by_ext == Some(Kind::Text) || looks_like_text(&head) {
         Kind::Text
     } else {
         Kind::Binary
@@ -276,6 +282,8 @@ mod tests {
         };
         assert_eq!(detect(&w("a.rs", b"fn main() {}")), Kind::Text);
         assert_eq!(detect(&w("README", b"hello")), Kind::Text);
+        assert_eq!(detect(&w("README.md", b"# hi")), Kind::Markdown);
+        assert_eq!(detect(&w("zip.md", b"PKrest")), Kind::Archive);
         assert_eq!(detect(&w("x.mp4", b"\0\0\0 ftyp")), Kind::Video);
         assert_eq!(detect(&w("x.docx", b"PK\x03\x04")), Kind::Handler);
         // A renamed archive, an unknown binary, a PDF without its extension.

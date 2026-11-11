@@ -2,7 +2,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
-export type Kind = 'text' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'binary';
+export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'binary';
 
 /** The file a preview shows. */
 export interface Shown {
@@ -46,6 +46,13 @@ export interface TextPreview {
   truncated: boolean;
   encoding: string;
   language: string | null;
+}
+
+/** Markdown rendered in Rust and cleaned there (crates/omnilook-core/src/markdown.rs). */
+export interface MarkdownPreview {
+  html: string;
+  truncated: boolean;
+  encoding: string;
 }
 
 export interface HexPreview {
@@ -96,6 +103,9 @@ export const api = {
   /** Flat [start, length, class] triples in UTF-16 units. */
   highlight: (id: number) => invoke<number[]>('highlight', { id }),
   readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
+  readMarkdown: (id: number) => invoke<MarkdownPreview>('read_markdown', { id }),
+  /** A link from a preview: web and mail addresses only (refused otherwise). */
+  openUrl: (url: string) => invoke<boolean>('open_url', { url }),
   readFolder: (id: number) => invoke<FolderPreview>('read_folder', { id }),
   readArchive: (id: number, locale: string) => invoke<ArchivePreview>('read_archive', { id, locale }),
   getSettings: () => invoke<Settings>('get_settings'),

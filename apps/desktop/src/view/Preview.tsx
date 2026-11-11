@@ -9,6 +9,7 @@ import { api, type HexPreview, type Shown } from '../lib/api';
 import { formatSize } from '../lib/format';
 import { ArchiveView } from './ArchiveView';
 import { FolderView } from './FolderView';
+import { MarkdownView } from './MarkdownView';
 import { TextView } from './TextView';
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
@@ -73,10 +74,16 @@ function MediaView({ shown, video }: { shown: Shown; video: boolean }) {
   );
 }
 
-export function Preview({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
+/** Kinds with a rendered view and a source view (the title bar switches). */
+export const HAS_SOURCE: Shown['kind'][] = ['markdown', 'svg'];
+
+export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta: string) => void; source: boolean }) {
+  if (source && HAS_SOURCE.includes(shown.kind)) return <TextView shown={shown} onMeta={onMeta} />;
   switch (shown.kind) {
     case 'text':
       return <TextView shown={shown} onMeta={onMeta} />;
+    case 'markdown':
+      return <MarkdownView shown={shown} onMeta={onMeta} />;
     case 'image':
     case 'svg':
       return <ImageView shown={shown} onMeta={onMeta} />;

@@ -9,7 +9,10 @@
     "plainText": "Plain text",
     "lines": "{count, plural, one {# line} other {# lines}}",
     "truncated": "Only the beginning is shown",
-    "loading": "Reading…"
+    "loading": "Reading…",
+    "mode": "View",
+    "rendered": "Rendered",
+    "source": "Source"
   },
   "settings": {
     "title": "Omni Look Settings",
