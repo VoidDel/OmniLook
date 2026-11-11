@@ -22,6 +22,9 @@ pub struct Settings {
     pub hotkey: Hotkey,
     /// Start the agent when signing in to Windows.
     pub autostart: bool,
+    /// Show the notification-area icon (off by default: starting Omni Look again opens the
+    /// settings).
+    pub tray: bool,
     /// `auto` or a language tag.
     pub language: String,
     /// The page's appearance settings (mode, themes, accent), opaque here.
@@ -33,6 +36,7 @@ impl Default for Settings {
         Self {
             hotkey: Hotkey::default(),
             autostart: true,
+            tray: false,
             language: "auto".into(),
             appearance: serde_json::Value::Null,
         }

@@ -82,16 +82,7 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-fallback .fi { width: 72px; height: 72px; }
 .look-fallback b { color: var(--fg-primary); font-size: 1.05rem; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ------------------------------------------------------------ settings */
+/* ------------------------------------------------------------ settings (omni-ui's set-body / set-group / set-row) */
 .settings .winctl { align-self: stretch; }
-.settings-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 24px; }
-.set-group { margin-bottom: 20px; }
-.set-group h2 { font-size: .8rem; font-weight: 600; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: .04em; margin: 8px 0; }
-.set-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 12px 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 8px); margin-bottom: 6px;
-}
-.set-row .lbl { font-size: .9rem; }
-.set-row .hint { font-size: .8rem; color: var(--fg-secondary); margin-top: 2px; }
-.settings-foot { color: var(--fg-tertiary, var(--fg-secondary)); font-size: .8rem; text-align: center; }
+.settings .set-body { flex: 1; min-height: 0; }
+.settings-foot { color: var(--fg-muted); font-size: .8rem; text-align: center; margin: 0; }

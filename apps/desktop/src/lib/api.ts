@@ -32,6 +32,8 @@ export interface Appearance {
 export interface Settings {
   hotkey: 'ctrlSpace' | 'space';
   autostart: boolean;
+  /** The notification-area icon. */
+  tray: boolean;
   language: string;
   /** Null until saved once. */
   appearance: Appearance | null;

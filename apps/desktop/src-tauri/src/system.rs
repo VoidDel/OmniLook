@@ -69,6 +69,16 @@ fn get_sz(key: HKEY, sub: &str, name: &str) -> Option<String> {
     })
 }
 
+/// The UI language for a setting: the setting itself, or Windows' when it is `auto`.
+pub fn ui_language(setting: &str) -> String {
+    if setting != "auto" && !setting.is_empty() {
+        return setting.to_owned();
+    }
+    let mut buf = [0u16; 85];
+    let n = unsafe { windows::Win32::Globalization::GetUserDefaultLocaleName(&mut buf) };
+    String::from_utf16_lossy(&buf[..(n.max(1) - 1) as usize])
+}
+
 pub fn exe() -> PathBuf {
     std::env::current_exe().unwrap_or_else(|_| PathBuf::from("omnilook.exe"))
 }

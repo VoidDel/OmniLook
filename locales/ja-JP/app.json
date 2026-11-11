@@ -27,7 +27,9 @@
     "modeLight": "ライト",
     "modeDark": "ダーク",
     "lightTheme": "ライトテーマ",
-    "darkTheme": "ダークテーマ"
+    "darkTheme": "ダークテーマ",
+    "tray": "通知領域にアイコンを表示",
+    "trayHint": "オフのときは、スタートメニューから Omni Look をもう一度起動するとこの画面が開きます"
   },
   "archive": {
     "summary": "ファイル {files} 個、フォルダー {folders} 個、合計 {size}",

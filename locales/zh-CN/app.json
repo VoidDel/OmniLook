@@ -27,7 +27,9 @@
     "modeLight": "浅色",
     "modeDark": "深色",
     "lightTheme": "浅色主题",
-    "darkTheme": "深色主题"
+    "darkTheme": "深色主题",
+    "tray": "显示托盘图标",
+    "trayHint": "关闭时，再次从开始菜单启动 Omni Look 即打开这个窗口"
   },
   "archive": {
     "summary": "{files} 个文件，{folders} 个文件夹，共 {size}",

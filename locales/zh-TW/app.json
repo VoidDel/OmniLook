@@ -27,7 +27,9 @@
     "modeLight": "淺色",
     "modeDark": "深色",
     "lightTheme": "淺色主題",
-    "darkTheme": "深色主題"
+    "darkTheme": "深色主題",
+    "tray": "顯示通知區域圖示",
+    "trayHint": "關閉時，再次從開始功能表啟動 Omni Look 即開啟這個視窗"
   },
   "archive": {
     "summary": "{files} 個檔案，{folders} 個資料夾，共 {size}",

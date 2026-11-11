@@ -27,7 +27,9 @@
     "modeLight": "Light",
     "modeDark": "Dark",
     "lightTheme": "Light theme",
-    "darkTheme": "Dark theme"
+    "darkTheme": "Dark theme",
+    "tray": "Show the notification-area icon",
+    "trayHint": "When it is off, start Omni Look again from the Start menu to open this window"
   },
   "archive": {
     "summary": "{files, plural, one {# file} other {# files}}, {folders, plural, one {# folder} other {# folders}}, {size} in all",

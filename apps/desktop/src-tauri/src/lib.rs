@@ -20,6 +20,8 @@ mod client;
 #[cfg(windows)]
 mod system;
 #[cfg(windows)]
+mod tray;
+#[cfg(windows)]
 mod ui;
 
 use std::process::ExitCode;

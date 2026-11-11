@@ -35,6 +35,7 @@ use crate::{
     protocol::{Reply, Request, ViewCommand},
     settings::{Hotkey, Settings},
     system::{self, Log},
+    tray,
 };
 
 enum Event {
@@ -352,7 +353,9 @@ impl Agent {
                 }
             }
             Request::Reload => {
-                set_hotkey(&Settings::load());
+                let s = Settings::load();
+                set_hotkey(&s);
+                tray::set(s.tray, &system::ui_language(&s.language));
                 Reply::ok()
             }
             Request::Quit => Reply::ok(),
@@ -408,6 +411,7 @@ pub fn run() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    tray::set(settings.tray, &system::ui_language(&settings.language));
     let mut agent = Agent {
         wake,
         log,
@@ -429,6 +433,9 @@ pub fn run() -> ExitCode {
             DispatchMessageW(&msg);
         }
     }
+    // Stopped from the tray menu (or --quit): the preview goes too.
+    agent.close_view();
+    tray::set(false, "");
     agent.log.line("agent stopped");
     ExitCode::SUCCESS
 }

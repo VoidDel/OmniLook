@@ -1,15 +1,29 @@
 // The settings window (docs/development-plan.md §1.2): the hotkey, starting with Windows, the
-// language and the appearance. Every change is saved at once; the agent reloads the hotkey.
+// notification-area icon, the language and the appearance. Every change is saved at once; the
+// agent reloads what it uses (hotkey, icon).
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Icon, Segmented, Select, Switch, builtinThemes, type Platform } from 'omni-ui';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LANGUAGE_NAMES, SUPPORTED, resolveLang, setLanguage } from '../i18n';
 import { api, type Appearance, type Settings } from '../lib/api';
 import { nextFrame } from '../lib/frame';
 import { DEFAULT_APPEARANCE, applyTheme } from '../lib/theme';
+
+/** One setting: its label and hint on the left, the control on the right (omni-ui's layout). */
+function Row({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="set-row">
+      <div className="lab">
+        <span>{label}</span>
+        {hint && <small>{hint}</small>}
+      </div>
+      <div className="ctl">{children}</div>
+    </div>
+  );
+}
 
 export function SettingsApp({ platform }: { platform: Platform }) {
   const { t, i18n } = useTranslation();
@@ -60,14 +74,10 @@ export function SettingsApp({ platform }: { platform: Platform }) {
           </button>
         </div>
       </header>
-      <main className="settings-body">
-        <section className="set-group">
-          <h2>{t('settings.general')}</h2>
-          <div className="set-row">
-            <div>
-              <div className="lbl">{t('settings.hotkey')}</div>
-              <div className="hint">{t('settings.hotkeyHint')}</div>
-            </div>
+      <main className="set-body">
+        <h2>{t('settings.general')}</h2>
+        <div className="set-group">
+          <Row label={t('settings.hotkey')} hint={t('settings.hotkeyHint')}>
             <Segmented
               value={s.hotkey}
               label={t('settings.hotkey')}
@@ -77,19 +87,17 @@ export function SettingsApp({ platform }: { platform: Platform }) {
               ]}
               onChange={(hotkey) => save({ ...s, hotkey })}
             />
-          </div>
-          <div className="set-row">
-            <div>
-              <div className="lbl">{t('settings.autostart')}</div>
-              <div className="hint">{t('settings.autostartHint')}</div>
-            </div>
+          </Row>
+          <Row label={t('settings.autostart')} hint={t('settings.autostartHint')}>
             <Switch checked={s.autostart} label={t('settings.autostart')} onChange={(autostart) => save({ ...s, autostart })} />
-          </div>
-        </section>
-        <section className="set-group">
-          <h2>{t('settings.appearance')}</h2>
-          <div className="set-row">
-            <div className="lbl">{t('settings.language')}</div>
+          </Row>
+          <Row label={t('settings.tray')} hint={t('settings.trayHint')}>
+            <Switch checked={s.tray} label={t('settings.tray')} onChange={(tray) => save({ ...s, tray })} />
+          </Row>
+        </div>
+        <h2>{t('settings.appearance')}</h2>
+        <div className="set-group">
+          <Row label={t('settings.language')}>
             <Select
               value={s.language}
               label={t('settings.language')}
@@ -99,9 +107,8 @@ export function SettingsApp({ platform }: { platform: Platform }) {
                 void setLanguage(resolveLang(language));
               }}
             />
-          </div>
-          <div className="set-row">
-            <div className="lbl">{t('settings.mode')}</div>
+          </Row>
+          <Row label={t('settings.mode')}>
             <Segmented
               value={look.mode}
               label={t('settings.mode')}
@@ -112,16 +119,14 @@ export function SettingsApp({ platform }: { platform: Platform }) {
               ]}
               onChange={(mode) => setLook({ mode })}
             />
-          </div>
-          <div className="set-row">
-            <div className="lbl">{t('settings.lightTheme')}</div>
+          </Row>
+          <Row label={t('settings.lightTheme')}>
             <Select value={look.lightTheme} label={t('settings.lightTheme')} options={themeOptions(false)} onChange={(lightTheme) => setLook({ lightTheme })} />
-          </div>
-          <div className="set-row">
-            <div className="lbl">{t('settings.darkTheme')}</div>
+          </Row>
+          <Row label={t('settings.darkTheme')}>
             <Select value={look.darkTheme} label={t('settings.darkTheme')} options={themeOptions(true)} onChange={(darkTheme) => setLook({ darkTheme })} />
-          </div>
-        </section>
+          </Row>
+        </div>
         <p className="settings-foot">Omni Look {version || __APP_VERSION__}</p>
       </main>
     </div>
