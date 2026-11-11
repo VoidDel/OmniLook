@@ -5,6 +5,10 @@ use std::{
     process::{Command, Stdio},
 };
 
+pub fn exe() -> std::path::PathBuf {
+    std::env::current_exe().unwrap_or_else(|_| "omnilook".into())
+}
+
 fn xdg_open(arg: &std::ffi::OsStr) -> bool {
     Command::new("xdg-open")
         .arg(arg)

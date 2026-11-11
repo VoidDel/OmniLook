@@ -78,5 +78,24 @@
     "sampleCjk": "天地玄黄，宇宙洪荒。",
     "sampleKana": "いろはにほへと",
     "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
+  },
+  "about": {
+    "title": "About",
+    "check": "Check for updates",
+    "checking": "Checking for updates…",
+    "latest": "You have the latest version",
+    "available": "Version {version} is available",
+    "install": "Update to {version}",
+    "downloading": "Downloading the update…",
+    "downloadingPercent": "Downloading the update… {percent}%",
+    "failed": "Could not check for updates: {error}",
+    "releases": "See releases",
+    "auto": "Check for updates automatically",
+    "autoHint": "Once a day in the background; you are asked before anything is installed",
+    "feedback": "Feedback",
+    "feedbackHint": "Report a problem or suggest something (GitHub)",
+    "report": "Report a problem",
+    "home": "Project page",
+    "open": "Open"
   }
 }

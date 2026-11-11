@@ -78,5 +78,24 @@
     "sampleCjk": "天地玄黄，宇宙洪荒。",
     "sampleKana": "いろはにほへと",
     "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
+  },
+  "about": {
+    "title": "关于",
+    "check": "检查更新",
+    "checking": "正在检查更新…",
+    "latest": "已是最新版本",
+    "available": "有新版本 {version}",
+    "install": "更新到 {version}",
+    "downloading": "正在下载更新…",
+    "downloadingPercent": "正在下载更新…{percent}%",
+    "failed": "检查更新失败：{error}",
+    "releases": "查看新版本",
+    "auto": "自动检查更新",
+    "autoHint": "每天在后台检查一次，有新版本时提示；更新需要你确认",
+    "feedback": "问题反馈",
+    "feedbackHint": "报告问题或提出建议（GitHub）",
+    "report": "反馈问题",
+    "home": "项目主页",
+    "open": "打开"
   }
 }

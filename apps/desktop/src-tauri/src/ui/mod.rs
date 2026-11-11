@@ -23,7 +23,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{cli::ViewArgs, paths, settings::Settings, system};
+use crate::{cli::ViewArgs, paths, settings::Settings, system, update};
 use omnilook_core::{Kind, archive, audio, detect, folder, font, hex, markdown, office, text};
 use serde::Serialize;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
@@ -332,6 +332,8 @@ fn app_version() -> &'static str {
 enum Role {
     View(ViewArgs),
     Settings,
+    /// No window: the agent's daily update check.
+    UpdateCheck,
 }
 
 fn run(role: Role) -> ExitCode {
@@ -354,6 +356,11 @@ fn run(role: Role) -> ExitCode {
                 look::serve(ctx.app_handle(), req, responder)
             });
     }
+    if !matches!(role, Role::View(_)) {
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .manage(update::Pending::default());
+    }
     let result = builder
         .on_window_event(platform::window_event)
         .invoke_handler(tauri::generate_handler![
@@ -374,6 +381,8 @@ fn run(role: Role) -> ExitCode {
             platform::host_show,
             platform::host_area,
             platform::host_unload,
+            update::update_check,
+            update::update_install,
             open_url,
             get_settings,
             save_settings,
@@ -421,6 +430,12 @@ fn run(role: Role) -> ExitCode {
                         .inspect(platform::window_icons)?;
                     platform::serve_settings(handle);
                 }
+                Role::UpdateCheck => {
+                    tauri::async_runtime::spawn(async move {
+                        update::background_check(&handle).await;
+                        handle.exit(0);
+                    });
+                }
             }
             Ok(())
         })
@@ -437,6 +452,11 @@ pub fn run_view(args: ViewArgs) -> ExitCode {
 
 pub fn run_settings() -> ExitCode {
     run(Role::Settings)
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn run_update_check() -> ExitCode {
+    run(Role::UpdateCheck)
 }
 
 /// Asks a running settings window to come forward (Windows: the agent and its pipes).

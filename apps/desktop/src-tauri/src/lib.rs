@@ -12,6 +12,7 @@ pub mod cli;
 pub mod paths;
 pub mod protocol;
 pub mod settings;
+mod update;
 
 #[cfg(windows)]
 mod agent;
@@ -46,6 +47,7 @@ pub fn main() -> ExitCode {
         }
         Mode::Preview { path, title, nav } => client::preview(path, title, nav),
         Mode::Quit => client::quit(),
+        Mode::UpdateCheck => ui::run_update_check(),
         Mode::Usage(msg) => {
             eprintln!("{msg}");
             ExitCode::from(2)
@@ -75,7 +77,7 @@ pub fn main() -> ExitCode {
             })
         }
         Mode::Settings => ui::run_settings(),
-        Mode::Quit => ExitCode::SUCCESS,
+        Mode::Quit | Mode::UpdateCheck => ExitCode::SUCCESS,
         Mode::Agent => {
             eprintln!("omnilook: the agent (hotkey) is for Windows; run omnilook <file>");
             ExitCode::from(2)

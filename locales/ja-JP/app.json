@@ -78,5 +78,24 @@
     "sampleCjk": "天地玄黄、宇宙洪荒。",
     "sampleKana": "いろはにほへと ちりぬるを",
     "sampleHangul": "다람쥐 헌 쳇바퀴에 타고파"
+  },
+  "about": {
+    "title": "バージョン情報",
+    "check": "更新を確認",
+    "checking": "更新を確認しています…",
+    "latest": "最新バージョンです",
+    "available": "バージョン {version} があります",
+    "install": "{version} に更新",
+    "downloading": "更新をダウンロードしています…",
+    "downloadingPercent": "更新をダウンロードしています… {percent}%",
+    "failed": "更新を確認できませんでした：{error}",
+    "releases": "リリースを見る",
+    "auto": "更新を自動で確認",
+    "autoHint": "1 日 1 回バックグラウンドで確認し、新しいバージョンがあれば知らせます。インストールの前に確認します",
+    "feedback": "フィードバック",
+    "feedbackHint": "問題の報告や提案（GitHub）",
+    "report": "問題を報告",
+    "home": "プロジェクトページ",
+    "open": "開く"
   }
 }

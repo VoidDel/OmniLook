@@ -39,7 +39,7 @@ use crate::{
     protocol::{NavAnswer, NavAsk, Reply, Request, ViewCommand},
     settings::{Hotkey, Settings},
     system::{self, Log},
-    tray,
+    tray, update,
 };
 
 enum Event {
@@ -51,6 +51,8 @@ enum Event {
     ViewExited(u32),
     /// Another window came to the front (its handle, as an integer to cross threads).
     Foreground(isize),
+    /// Time to see whether a daily update check is due.
+    UpdateTick,
     /// The caller answered which file is next to `from` (§6.3).
     NavDone {
         from: PathBuf,
@@ -160,6 +162,18 @@ impl Agent {
                         self.log.line(format!("caller's navigation: {e}"));
                     }
                     _ => {}
+                }
+            }
+            Event::UpdateTick => {
+                if !paths::isolated() && Settings::load().check_updates && update::due() {
+                    self.log.line("update check");
+                    let _ = Command::new(system::exe())
+                        .arg("--update-check")
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .creation_flags(0x0800_0000)
+                        .spawn();
                 }
             }
             Event::Foreground(h) => self.foreground(HWND(h as *mut _)),
@@ -520,6 +534,15 @@ pub fn run() -> ExitCode {
         None
     };
     tray::set(settings.tray, &system::ui_language(&settings.language));
+    // A while after starting (not with the sign-in rush), then every hour: is a check due?
+    let w = wake.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_secs(120));
+        loop {
+            w.send(Event::UpdateTick);
+            std::thread::sleep(Duration::from_secs(3600));
+        }
+    });
     let w = wake.clone();
     let _watch = foreground::watch(move |h| w.send(Event::Foreground(h.0 as isize)))
         .map_err(|e| log.line(format!("foreground watch: {e}")))

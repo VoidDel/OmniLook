@@ -28,6 +28,8 @@ pub struct Settings {
     /// Close the preview when another window comes to the front (anything but the preview and the
     /// window it was opened from).
     pub close_on_blur: bool,
+    /// Look for a new version once a day (the agent) and when the settings open.
+    pub check_updates: bool,
     /// `auto` or a language tag.
     pub language: String,
     /// The page's appearance settings (mode, themes, accent), opaque here.
@@ -41,6 +43,7 @@ impl Default for Settings {
             autostart: true,
             tray: false,
             close_on_blur: true,
+            check_updates: true,
             language: "auto".into(),
             appearance: serde_json::Value::Null,
         }

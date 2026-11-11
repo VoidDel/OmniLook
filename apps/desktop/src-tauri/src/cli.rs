@@ -24,6 +24,8 @@ pub enum Mode {
         nav: Option<String>,
     },
     Quit,
+    /// The agent's daily update check (no window, `update.rs`).
+    UpdateCheck,
     Usage(String),
 }
 
@@ -44,6 +46,9 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
     }
     if flag("--quit") {
         return Mode::Quit;
+    }
+    if flag("--update-check") {
+        return Mode::UpdateCheck;
     }
     let title = value("--title").map(|t| t.to_string_lossy().into_owned());
     let nav = value("--nav")

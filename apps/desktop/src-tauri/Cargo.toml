@@ -30,6 +30,7 @@ omnilook-core.workspace = true
 tauri.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tauri-plugin-updater = "2.14.1"
 
 [target.'cfg(windows)'.dependencies]
 omnilook-win.workspace = true

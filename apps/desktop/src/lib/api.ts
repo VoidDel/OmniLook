@@ -52,9 +52,17 @@ export interface Settings {
   tray: boolean;
   /** Close the preview when another window comes to the front. */
   closeOnBlur: boolean;
+  /** Look for a new version once a day and when the settings open (Windows). */
+  checkUpdates: boolean;
   language: string;
   /** Null until saved once. */
   appearance: Appearance | null;
+}
+
+/** A newer release (src-tauri/src/update.rs). */
+export interface UpdateInfo {
+  version: string;
+  notes: string;
 }
 
 export interface TextPreview {
@@ -174,4 +182,7 @@ export const api = {
   getSettings: () => invoke<Settings>('get_settings'),
   saveSettings: (settings: Settings) => invoke<void>('save_settings', { settings }),
   appVersion: () => invoke<string>('app_version'),
+  updateCheck: () => invoke<UpdateInfo | null>('update_check'),
+  /** Downloads and installs; progress arrives as `update:progress` events. */
+  updateInstall: () => invoke<void>('update_install'),
 };

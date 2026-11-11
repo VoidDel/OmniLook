@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { LANGUAGE_NAMES, SUPPORTED, resolveLang, setLanguage } from '../i18n';
 import { api, type Appearance, type Settings } from '../lib/api';
 import { nextFrame } from '../lib/frame';
+import { About } from './About';
 import { DEFAULT_APPEARANCE, applyTheme } from '../lib/theme';
 
 /** One setting: its label and hint on the left, the control on the right (omni-ui's layout). */
@@ -134,7 +135,7 @@ export function SettingsApp({ platform }: { platform: Platform }) {
             <Select value={look.darkTheme} label={t('settings.darkTheme')} options={themeOptions(true)} onChange={(darkTheme) => setLook({ darkTheme })} />
           </Row>
         </div>
-        <p className="settings-foot">Omni Look {version || __APP_VERSION__}</p>
+        <About s={s} save={save} platform={platform} version={version || __APP_VERSION__} />
       </main>
     </div>
   );
