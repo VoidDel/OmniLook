@@ -10,8 +10,11 @@ use std::{
     path::PathBuf,
     process::{Command, ExitCode, Stdio},
     sync::{Arc, mpsc},
-    time::Duration,
+    time::{Duration, Instant},
 };
+
+/// How long after a preview opens a foreground change is taken as part of opening it.
+const SETTLE: Duration = Duration::from_millis(1000);
 
 use omnilook_core::detect;
 use omnilook_win::{
@@ -93,6 +96,9 @@ struct Agent {
     followed: Option<Followed>,
     /// The window the preview was opened from (`foreground::stays`).
     home: Option<Home>,
+    /// When the preview opened from `home`: the foreground often changes once just after (the
+    /// Run dialog or a launcher closing), and that change moves the home instead of closing.
+    opened: Option<Instant>,
     /// Close the preview when another window comes to the front (a setting).
     close_on_blur: bool,
 }
@@ -147,6 +153,12 @@ impl Agent {
             return;
         }
         let w = foreground::describe(hwnd);
+        if self.opened.is_some_and(|t| t.elapsed() < SETTLE) {
+            if w.pid != v.pid && w.handle != 0 {
+                self.home = foreground::home_of(hwnd);
+            }
+            return;
+        }
         if !foreground::stays(&w, self.home, v.pid) {
             self.log.line(format!(
                 "foreground {} ({}): closing the preview",
@@ -189,6 +201,7 @@ impl Agent {
             .ok();
         let window = focus.window();
         self.home = foreground::home_of(window);
+        self.opened = Some(Instant::now());
         self.followed = Some(Followed {
             view,
             _sub: sub,
@@ -285,11 +298,12 @@ impl Agent {
             }
         }
         // Another GPU mode, or the preview stopped answering: start again.
-        let (followed, home) = (self.followed.take(), self.home);
+        let (followed, home, opened) = (self.followed.take(), self.home, self.opened);
         let anchor = anchor.or(followed.as_ref().map(|f| f.window));
         self.close_view();
         self.followed = followed;
         self.home = home;
+        self.opened = opened;
         self.spawn(path, title, anchor, gpu);
     }
 
@@ -310,6 +324,7 @@ impl Agent {
         self.view = None;
         self.followed = None;
         self.home = None;
+        self.opened = None;
         hook::set_preview_open(false);
     }
 
@@ -346,6 +361,7 @@ impl Agent {
                     // a terminal) is in front now, and is where the preview comes from.
                     self.followed = None;
                     self.home = foreground::current_home();
+                    self.opened = Some(Instant::now());
                     self.show(path, title, None);
                 }
                 Reply::ok()
@@ -410,7 +426,7 @@ pub fn run() -> ExitCode {
         tx,
         thread: unsafe { GetCurrentThreadId() },
     };
-    let Ok(name) = pipe::pipe_name("agent") else {
+    let Ok(name) = paths::pipe("agent") else {
         return ExitCode::FAILURE;
     };
     let w = wake.clone();
@@ -437,12 +453,19 @@ pub fn run() -> ExitCode {
         system::register();
     }
     let w = wake.clone();
-    let _hook = match hook::install(move |e| w.send(Event::Key(e))) {
-        Ok(h) => h,
-        Err(e) => {
-            log.line(format!("hook: {e}"));
-            return ExitCode::FAILURE;
+    // An isolated agent (a test) leaves the keys to the user's own agent unless asked: two hooks
+    // would both answer the hotkey.
+    let hooked = !paths::isolated() || std::env::var_os("OMNILOOK_HOOK").is_some();
+    let _hook = if hooked {
+        match hook::install(move |e| w.send(Event::Key(e))) {
+            Ok(h) => Some(h),
+            Err(e) => {
+                log.line(format!("hook: {e}"));
+                return ExitCode::FAILURE;
+            }
         }
+    } else {
+        None
     };
     tray::set(settings.tray, &system::ui_language(&settings.language));
     let w = wake.clone();
@@ -455,6 +478,7 @@ pub fn run() -> ExitCode {
         view: None,
         followed: None,
         home: None,
+        opened: None,
         close_on_blur: settings.close_on_blur,
     };
     let mut msg = MSG::default();

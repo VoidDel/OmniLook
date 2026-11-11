@@ -8,6 +8,22 @@ pub fn isolated() -> bool {
     std::env::var_os("OMNILOOK_HOME").is_some()
 }
 
+/// The name of one of Omni Look's pipes (`agent`, `settings`, `view-<pid>`). An isolated
+/// instance adds a mark of its folder: a test's `--quit` or preview must never reach the agent
+/// the user is running (the names are per user, not per folder).
+pub fn pipe(tag: &str) -> std::io::Result<String> {
+    let tag = match std::env::var_os("OMNILOOK_HOME") {
+        Some(home) => {
+            use std::hash::{Hash, Hasher};
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            home.hash(&mut h);
+            format!("{tag}-iso{:08x}", h.finish() as u32)
+        }
+        None => tag.to_owned(),
+    };
+    omnilook_win::pipe::pipe_name(&tag).map_err(std::io::Error::other)
+}
+
 fn env_dir(var: &str) -> PathBuf {
     if let Some(home) = std::env::var_os("OMNILOOK_HOME") {
         return PathBuf::from(home);

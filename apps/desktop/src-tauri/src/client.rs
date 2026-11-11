@@ -10,6 +10,7 @@ use std::{
 use omnilook_win::pipe;
 
 use crate::{
+    paths,
     protocol::{Reply, Request},
     system,
 };
@@ -18,7 +19,7 @@ use crate::{
 const DETACHED: u32 = 0x0800_0000 | 0x0000_0008;
 
 pub fn agent_pipe() -> Option<String> {
-    pipe::pipe_name("agent").ok()
+    paths::pipe("agent").ok()
 }
 
 pub fn send(req: &Request, wait: Duration) -> Reply {
