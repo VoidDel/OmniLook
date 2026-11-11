@@ -160,7 +160,9 @@ fn clean(html: &str) -> String {
         .add_tag_attributes("th", ["style"])
         .add_tag_attributes("td", ["style"])
         .id_prefix(Some(ID_PREFIX))
-        .url_schemes(HashSet::from(["http", "https", "mailto"]))
+        // `look:` is the window's own protocol where it keeps its scheme (Linux): the local
+        // images' addresses, made by `render`'s caller.
+        .url_schemes(HashSet::from(["http", "https", "mailto", "look"]))
         .link_rel(Some("noopener noreferrer"))
         .attribute_filter(|element, attribute, value| match (element, attribute) {
             // Only task-list check boxes, and only alignment as a style.

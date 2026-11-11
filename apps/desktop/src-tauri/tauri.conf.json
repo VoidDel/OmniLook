@@ -18,18 +18,20 @@
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": "'self' data: blob: http://look.localhost",
-        "media-src": "http://look.localhost",
-        "frame-src": "http://look.localhost",
-        "font-src": "'self' data: http://look.localhost",
-        "connect-src": "ipc: http://ipc.localhost http://look.localhost"
+        "img-src": "'self' data: blob: http://look.localhost look:",
+        "media-src": "http://look.localhost look:",
+        "frame-src": "http://look.localhost look:",
+        "font-src": "'self' data: http://look.localhost look:",
+        "connect-src": "ipc: http://ipc.localhost http://look.localhost look:"
       },
       "freezePrototype": true
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "publisher": "Omni Look Contributors",
     "copyright": "Copyright (c) 2026 Omni Look Contributors. MIT License.",
     "category": "Utility",
@@ -46,12 +48,30 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["SimpChinese", "English"],
+        "languages": [
+          "SimpChinese",
+          "English"
+        ],
         "displayLanguageSelector": true,
         "installerHooks": "windows/hooks.nsh"
       },
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      }
+    },
+    "linux": {
+      "deb": {
+        "recommends": [
+          "gstreamer1.0-plugins-good",
+          "gstreamer1.0-plugins-bad",
+          "gstreamer1.0-libav"
+        ],
+        "section": "utils"
+      },
+      "rpm": {
+        "recommends": [
+          "gstreamer1-plugins-good"
+        ]
       }
     }
   }

@@ -3,36 +3,30 @@
 //! settings (`settings`, started from the Start menu).
 
 mod look;
+#[cfg(not(windows))]
+mod other;
+#[cfg(windows)]
+mod win;
+
+#[cfg(not(windows))]
+use other as platform;
+#[cfg(windows)]
+use win as platform;
 
 use std::{
     path::PathBuf,
     process::ExitCode,
     sync::{
-        Arc, Mutex,
+        Mutex,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::{Duration, SystemTime},
 };
 
+use crate::{cli::ViewArgs, paths, settings::Settings, system};
 use omnilook_core::{Kind, archive, audio, detect, folder, font, hex, markdown, office, text};
-use omnilook_win::{events::window_rect, handler, pipe};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
-use windows::Win32::{
-    Foundation::{HWND, RECT},
-    UI::WindowsAndMessaging::{
-        ASFW_ANY, AllowSetForegroundWindow, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
-        SWP_SHOWWINDOW, SetWindowPos,
-    },
-};
-
-use crate::{
-    cli::ViewArgs,
-    client, paths,
-    protocol::{Reply, Request, ViewCommand},
-    settings::Settings,
-    system,
-};
+use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
 /// The file a preview shows.
 #[derive(Debug, Clone, Serialize)]
@@ -60,13 +54,17 @@ struct Current {
 pub struct ViewState {
     current: Mutex<Option<Current>>,
     next: AtomicU64,
+    /// The Explorer window to center on (Windows).
+    #[cfg_attr(not(windows), allow(dead_code))]
     anchor: Option<isize>,
     /// The window has been shown once (later files keep its place).
     placed: AtomicBool,
-    /// This process's pipe, for the agent.
+    /// This process's pipe, for the agent (Windows).
+    #[cfg_attr(not(windows), allow(dead_code))]
     pipe: String,
-    /// The thread running system preview handlers, started on first use.
-    host: Mutex<Option<Arc<handler::Host>>>,
+    /// The thread running system preview handlers (Windows), started on first use.
+    #[cfg_attr(not(windows), allow(dead_code))]
+    host: platform::HostSlot,
 }
 
 impl ViewState {
@@ -101,7 +99,7 @@ impl ViewState {
                 .and_then(|m| m.modified().ok())
                 .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
                 .map(|d| d.as_millis() as u64),
-            url: format!("http://look.localhost/f/{token}"),
+            url: format!("{}/f/{token}", look::BASE),
             path,
         };
         if let Ok(mut c) = self.current.lock() {
@@ -111,46 +109,6 @@ impl ViewState {
             });
         }
         shown
-    }
-
-    /// The handler thread, started on first use; keys a handler passes back reach the page as
-    /// `host-key` events.
-    fn host(&self, app: &AppHandle) -> Result<Arc<handler::Host>, String> {
-        let mut h = self.host.lock().map_err(|e| e.to_string())?;
-        if let Some(h) = h.as_ref() {
-            return Ok(h.clone());
-        }
-        let app = app.clone();
-        let host = handler::Host::start(move |k| {
-            let name = match (k.vk, k.ctrl) {
-                (0x1B, _) => "Escape",
-                (0x20, true) => "CtrlSpace",
-                (0x25, false) => "ArrowLeft",
-                (0x27, false) => "ArrowRight",
-                _ => return false,
-            };
-            let _ = app.emit_to("view", "host-key", name);
-            true
-        })
-        .map(Arc::new)
-        .map_err(|e| e.to_string())?;
-        *h = Some(host.clone());
-        Ok(host)
-    }
-
-    /// A handler that did not answer leaves its thread stuck: the next file gets a new one.
-    fn drop_host(&self) {
-        if let Ok(mut h) = self.host.lock() {
-            h.take();
-        }
-    }
-
-    /// The window is closing: let the handler go first.
-    fn close_host(&self) {
-        let host = self.host.lock().ok().and_then(|mut h| h.take());
-        if let Some(h) = host {
-            h.unload_and_wait(Duration::from_millis(800));
-        }
     }
 
     fn shown(&self) -> Option<Shown> {
@@ -176,73 +134,6 @@ struct MarkdownPreview {
     encoding: String,
 }
 
-/// `--disable-gpu` halves WebView2's memory; only video needs the GPU (M0, `docs/m0-results.md`).
-fn browser_args(gpu: bool) -> String {
-    let mut a = String::from("--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection");
-    if !gpu {
-        a.push_str(" --disable-gpu");
-    }
-    a
-}
-
-fn notify_agent(req: Request) {
-    std::thread::spawn(move || {
-        let _ = client::send(&req, Duration::from_secs(2));
-    });
-}
-
-fn hwnd(w: &WebviewWindow) -> Option<HWND> {
-    w.hwnd().ok().map(|h| HWND(h.0))
-}
-
-/// Centers the preview on the Explorer window (or the primary monitor), sized for that monitor's
-/// scale, and shows it on top without taking the focus.
-fn place_and_show(w: &WebviewWindow, anchor: Option<isize>) {
-    let mut area = anchor.and_then(|a| window_rect(HWND(a as *mut _)));
-    let monitors = w.available_monitors().unwrap_or_default();
-    let monitor = area
-        .and_then(|r| {
-            let (cx, cy) = ((r.left + r.right) / 2, (r.top + r.bottom) / 2);
-            monitors.into_iter().find(|m| {
-                let (p, s) = (m.position(), m.size());
-                cx >= p.x && cy >= p.y && cx < p.x + s.width as i32 && cy < p.y + s.height as i32
-            })
-        })
-        .or_else(|| w.primary_monitor().ok().flatten());
-    if area.is_none()
-        && let Some(m) = &monitor
-    {
-        let (p, s) = (m.position(), m.size());
-        area = Some(RECT {
-            left: p.x,
-            top: p.y,
-            right: p.x + s.width as i32,
-            bottom: p.y + s.height as i32,
-        });
-    }
-    let scale = monitor.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
-    let (width, height) = ((960.0 * scale) as i32, (680.0 * scale) as i32);
-    if let Some(a) = area {
-        let x = (a.left + a.right - width) / 2;
-        let y = (a.top + a.bottom - height) / 2;
-        let _ = w.set_size(tauri::PhysicalSize::new(width as u32, height as u32));
-        let _ = w.set_position(tauri::PhysicalPosition::new(x, y));
-    }
-    if let Some(h) = hwnd(w) {
-        unsafe {
-            let _ = SetWindowPos(
-                h,
-                Some(HWND_TOPMOST),
-                0,
-                0,
-                0,
-                0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW,
-            );
-        }
-    }
-}
-
 // --- preview commands -------------------------------------------------------------------------
 
 /// The page is listening: what to show first.
@@ -257,33 +148,18 @@ fn view_show(app: AppHandle, state: tauri::State<'_, ViewState>) {
     if state.placed.swap(true, Ordering::Relaxed) {
         return;
     }
-    if let Some(w) = app.get_webview_window("view") {
-        place_and_show(&w, state.anchor);
-    }
-    notify_agent(Request::ViewReady {
-        pid: std::process::id(),
-        pipe: state.pipe.clone(),
-    });
+    platform::first_shown(&app, &state);
 }
 
 #[tauri::command]
 fn view_close(app: AppHandle, state: tauri::State<'_, ViewState>) {
-    state.close_host();
-    let _ = client::send(
-        &Request::ViewClosed {
-            pid: std::process::id(),
-        },
-        Duration::from_secs(1),
-    );
+    platform::closing(&state);
     app.exit(0);
 }
 
 #[tauri::command]
-fn view_nav(step: i32) {
-    notify_agent(Request::Nav {
-        pid: std::process::id(),
-        step,
-    });
+fn view_nav(app: AppHandle, state: tauri::State<'_, ViewState>, step: i32) {
+    platform::nav(&app, &state, step);
 }
 
 #[tauri::command]
@@ -341,10 +217,7 @@ async fn read_markdown(
     blocking(move || {
         let t = text::read(&path).map_err(|e| e.to_string())?;
         let html = markdown::render(&t.text, |dest| {
-            Some(format!(
-                "http://look.localhost/r/{token}/{}",
-                look::encode(dest)
-            ))
+            Some(format!("{}/r/{token}/{}", look::BASE, look::encode(dest)))
         });
         Ok(MarkdownPreview {
             html,
@@ -371,20 +244,11 @@ async fn read_audio(
 /// for handlers that has none here (Word files without Office) gets the file card from the page.
 fn view_kind(path: &std::path::Path) -> Kind {
     match detect(path) {
-        Kind::Binary if handlers(path) => Kind::Handler,
+        Kind::Binary if platform::handlers(path) => Kind::Handler,
         // Word, Excel, PowerPoint without Office: their text, read here.
-        Kind::Handler if !handlers(path) && office::handles(path) => Kind::Office,
+        Kind::Handler if !platform::handlers(path) && office::handles(path) => Kind::Office,
         k => k,
     }
-}
-
-/// Whether the system has a preview handler for the file. A test can pretend it has none
-/// (`OMNILOOK_NO_HANDLERS`, isolated instances only), to see what a computer without Office shows.
-fn handlers(path: &std::path::Path) -> bool {
-    if paths::isolated() && std::env::var_os("OMNILOOK_NO_HANDLERS").is_some() {
-        return false;
-    }
-    handler::available(path)
 }
 
 /// What a font file says about itself, names in the UI language where it has them.
@@ -406,52 +270,6 @@ async fn read_office(
 ) -> Result<office::OfficePreview, String> {
     let path = path_of(&state, id)?;
     blocking(move || office::read(&path)).await
-}
-
-/// Shows the file with its system preview handler over the page's area (`x`, `y`, `w`, `h` in
-/// window pixels), in the page's colours (`0x00BBGGRR`). Waits up to 10 s: a handler that does
-/// not answer by then is given up on.
-#[allow(clippy::too_many_arguments)]
-#[tauri::command]
-async fn host_show(
-    app: AppHandle,
-    id: u64,
-    x: i32,
-    y: i32,
-    w: i32,
-    h: i32,
-    bg: Option<u32>,
-    fg: Option<u32>,
-    state: tauri::State<'_, ViewState>,
-) -> Result<String, String> {
-    let path = path_of(&state, id)?;
-    let parent = app
-        .get_webview_window("view")
-        .and_then(|w| w.hwnd().ok())
-        .map(|h| h.0 as isize)
-        .ok_or("no window")?;
-    let host = state.host(&app)?;
-    let area = handler::Area { x, y, w, h };
-    let r =
-        blocking(move || host.show(parent, &path, area, bg.zip(fg), Duration::from_secs(10))).await;
-    if matches!(&r, Err(e) if e == "timeout") {
-        state.drop_host();
-    }
-    r
-}
-
-#[tauri::command]
-fn host_area(x: i32, y: i32, w: i32, h: i32, state: tauri::State<'_, ViewState>) {
-    if let Some(host) = state.host.lock().ok().and_then(|h| h.clone()) {
-        host.set_area(handler::Area { x, y, w, h });
-    }
-}
-
-#[tauri::command]
-fn host_unload(state: tauri::State<'_, ViewState>) {
-    if let Some(host) = state.host.lock().ok().and_then(|h| h.clone()) {
-        host.unload();
-    }
 }
 
 /// A link clicked in a preview: web and mail addresses only.
@@ -496,10 +314,11 @@ fn get_settings() -> Settings {
 #[tauri::command]
 fn save_settings(settings: Settings) -> Result<(), String> {
     settings.save().map_err(|e| e.to_string())?;
+    #[cfg(windows)]
     if !paths::isolated() {
         system::set_autostart(settings.autostart);
     }
-    notify_agent(Request::Reload);
+    platform::settings_saved();
     Ok(())
 }
 
@@ -519,14 +338,14 @@ fn run(role: Role) -> ExitCode {
     let gpu = matches!(&role, Role::View(a) if a.gpu);
     let mut builder = tauri::Builder::default();
     if let Role::View(args) = &role {
-        let pipe_name = paths::pipe(&format!("view-{}", std::process::id())).unwrap_or_default();
+        let pipe_name = platform::view_pipe();
         let state = ViewState {
             current: Mutex::new(None),
             next: AtomicU64::new(0),
             anchor: args.anchor,
             placed: AtomicBool::new(false),
             pipe: pipe_name,
-            host: Mutex::new(None),
+            host: Default::default(),
         };
         state.set(args.path.clone(), args.title.clone());
         builder = builder
@@ -536,28 +355,7 @@ fn run(role: Role) -> ExitCode {
             });
     }
     let result = builder
-        .on_window_event(|window, event| match event {
-            // A system preview handler's window lies over the page in a popup: it follows.
-            tauri::WindowEvent::Moved(_) if window.label() == "view" => {
-                if let Some(state) = window.try_state::<ViewState>()
-                    && let Some(host) = state.host.lock().ok().and_then(|h| h.clone())
-                {
-                    host.follow_window();
-                }
-            }
-            // Moved to a display with another scale: icons for the new DPI.
-            tauri::WindowEvent::ScaleFactorChanged { .. } => {
-                if let Ok(h) = window.hwnd() {
-                    crate::win_icon::apply(h.0 as isize);
-                }
-            }
-            tauri::WindowEvent::Destroyed => {
-                if let Ok(h) = window.hwnd() {
-                    crate::win_icon::forget(h.0 as isize);
-                }
-            }
-            _ => {}
-        })
+        .on_window_event(platform::window_event)
         .invoke_handler(tauri::generate_handler![
             view_ready,
             view_show,
@@ -573,9 +371,9 @@ fn run(role: Role) -> ExitCode {
             read_audio,
             read_office,
             read_font,
-            host_show,
-            host_area,
-            host_unload,
+            platform::host_show,
+            platform::host_area,
+            platform::host_unload,
             open_url,
             get_settings,
             save_settings,
@@ -590,22 +388,24 @@ fn run(role: Role) -> ExitCode {
                         .file_name()
                         .map(|n| n.to_string_lossy().into_owned())
                         .unwrap_or_default();
-                    WebviewWindowBuilder::new(app, "view", WebviewUrl::App("index.html".into()))
-                        .title(format!("{name} - Omni Look"))
-                        .inner_size(960.0, 680.0)
-                        .min_inner_size(420.0, 280.0)
-                        .decorations(false)
-                        .visible(false)
-                        .focused(false)
-                        .skip_taskbar(true)
-                        .additional_browser_args(&browser_args(gpu))
-                        .data_directory(paths::webview_dir(gpu))
+                    let b = WebviewWindowBuilder::new(
+                        app,
+                        "view",
+                        WebviewUrl::App("index.html".into()),
+                    )
+                    .title(format!("{name} - Omni Look"))
+                    .inner_size(960.0, 680.0)
+                    .min_inner_size(420.0, 280.0)
+                    .decorations(false)
+                    .visible(false)
+                    .data_directory(paths::webview_dir(gpu));
+                    platform::view_window(b, gpu)
                         .build()
-                        .inspect(window_icons)?;
-                    serve_view_pipe(handle);
+                        .inspect(platform::window_icons)?;
+                    platform::serve_view(handle);
                 }
                 Role::Settings => {
-                    WebviewWindowBuilder::new(
+                    let b = WebviewWindowBuilder::new(
                         app,
                         "settings",
                         WebviewUrl::App("index.html".into()),
@@ -615,11 +415,11 @@ fn run(role: Role) -> ExitCode {
                     .min_inner_size(560.0, 420.0)
                     .decorations(false)
                     .visible(false)
-                    .additional_browser_args(&browser_args(false))
-                    .data_directory(paths::webview_dir(false))
-                    .build()
-                    .inspect(window_icons)?;
-                    serve_settings_pipe(handle);
+                    .data_directory(paths::webview_dir(false));
+                    platform::settings_window(b)
+                        .build()
+                        .inspect(platform::window_icons)?;
+                    platform::serve_settings(handle);
                 }
             }
             Ok(())
@@ -631,56 +431,6 @@ fn run(role: Role) -> ExitCode {
     }
 }
 
-/// A new window's taskbar, Alt+Tab and title icons at its DPI (`win_icon`): Tauri sets only a
-/// 32 px small icon, which the taskbar stretches.
-fn window_icons(w: &WebviewWindow) {
-    if let Ok(h) = w.hwnd() {
-        crate::win_icon::apply(h.0 as isize);
-    }
-}
-
-/// The agent sends files and "close" here.
-fn serve_view_pipe(app: AppHandle) {
-    let name = app.state::<ViewState>().pipe.clone();
-    let handler: pipe::Handler = Arc::new(move |line: String| {
-        match serde_json::from_str::<ViewCommand>(&line) {
-            Ok(ViewCommand::Show { path, title }) => {
-                let shown = app.state::<ViewState>().set(path, title);
-                let _ = app.emit_to("view", "show", shown);
-                Reply::ok().line()
-            }
-            Ok(ViewCommand::Close) => {
-                let app = app.clone();
-                // Answer before going (the agent waits a second at most); the handler goes first.
-                std::thread::spawn(move || {
-                    app.state::<ViewState>().close_host();
-                    std::thread::sleep(Duration::from_millis(30));
-                    app.exit(0);
-                });
-                Reply::ok().line()
-            }
-            Err(e) => Reply::err(e).line(),
-        }
-    });
-    let _ = pipe::serve(&name, handler);
-}
-
-/// A second "open settings" brings this window to the front.
-fn serve_settings_pipe(app: AppHandle) {
-    let Ok(name) = paths::pipe("settings") else {
-        return;
-    };
-    let handler: pipe::Handler = Arc::new(move |_line: String| {
-        if let Some(w) = app.get_webview_window("settings") {
-            let _ = w.unminimize();
-            let _ = w.show();
-            let _ = w.set_focus();
-        }
-        Reply::ok().line()
-    });
-    let _ = pipe::serve(&name, handler);
-}
-
 pub fn run_view(args: ViewArgs) -> ExitCode {
     run(Role::View(args))
 }
@@ -689,14 +439,97 @@ pub fn run_settings() -> ExitCode {
     run(Role::Settings)
 }
 
-/// Asks a running settings window to come forward (it may take the focus: we were just started
-/// by the user).
+/// Asks a running settings window to come forward (Windows: the agent and its pipes).
+#[cfg(windows)]
 pub fn focus_existing_settings() -> bool {
-    let Ok(name) = paths::pipe("settings") else {
-        return false;
+    platform::focus_existing_settings()
+}
+
+/// The file `step` places from `path` among the files of its folder, by name (natural order:
+/// `img2` before `img10`), hidden ones left out. `None` at either end.
+#[cfg_attr(windows, allow(dead_code))]
+pub fn sibling(path: &std::path::Path, step: i32) -> Option<PathBuf> {
+    let dir = path.parent()?;
+    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
+        .map(|e| e.path())
+        .filter(|p| {
+            p.file_name()
+                .is_some_and(|n| !n.to_string_lossy().starts_with('.'))
+        })
+        .collect();
+    let key = |p: &PathBuf| {
+        p.file_name()
+            .map(|n| n.to_string_lossy().to_lowercase())
+            .unwrap_or_default()
     };
-    unsafe {
-        let _ = AllowSetForegroundWindow(ASFW_ANY);
+    files.sort_by(|a, b| natural(&key(a), &key(b)));
+    let i = files.iter().position(|p| p == path)? as i64 + i64::from(step);
+    usize::try_from(i).ok().and_then(|i| files.get(i)).cloned()
+}
+
+/// Compares names with runs of digits by their value.
+fn natural(a: &str, b: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    let (mut x, mut y) = (a.chars().peekable(), b.chars().peekable());
+    loop {
+        match (x.peek().copied(), y.peek().copied()) {
+            (None, None) => return Ordering::Equal,
+            (None, _) => return Ordering::Less,
+            (_, None) => return Ordering::Greater,
+            (Some(c), Some(d)) if c.is_ascii_digit() && d.is_ascii_digit() => {
+                let mut n = String::new();
+                while let Some(c) = x.next_if(char::is_ascii_digit) {
+                    n.push(c);
+                }
+                let mut m = String::new();
+                while let Some(d) = y.next_if(char::is_ascii_digit) {
+                    m.push(d);
+                }
+                let (n, m) = (n.trim_start_matches('0'), m.trim_start_matches('0'));
+                let o = n.len().cmp(&m.len()).then_with(|| n.cmp(m));
+                if o.is_ne() {
+                    return o;
+                }
+            }
+            (Some(c), Some(d)) => {
+                let o = c.cmp(&d);
+                if o.is_ne() {
+                    return o;
+                }
+                x.next();
+                y.next();
+            }
+        }
     }
-    pipe::request(&name, "focus", Duration::from_millis(500)).is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn siblings_in_natural_order() {
+        let d = std::env::temp_dir().join(format!("omnilook-sib-{}", std::process::id()));
+        std::fs::create_dir_all(d.join("sub")).unwrap();
+        for n in ["img10.png", "img2.png", "a.txt", ".hidden"] {
+            std::fs::write(d.join(n), b"x").unwrap();
+        }
+        let name = |p: Option<PathBuf>| {
+            p.and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
+        };
+        assert_eq!(
+            name(sibling(&d.join("a.txt"), 1)).as_deref(),
+            Some("img2.png")
+        );
+        assert_eq!(
+            name(sibling(&d.join("img2.png"), 1)).as_deref(),
+            Some("img10.png")
+        );
+        assert_eq!(sibling(&d.join("img10.png"), 1), None);
+        assert_eq!(sibling(&d.join("a.txt"), -1), None);
+        std::fs::remove_dir_all(&d).unwrap();
+    }
 }

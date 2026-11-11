@@ -75,7 +75,10 @@ export function SettingsApp({ platform }: { platform: Platform }) {
         </div>
       </header>
       <main className="set-body">
-        <h2>{t('settings.general')}</h2>
+        {/* Hotkey, starting with the system, the icon and closing on blur belong to the agent,
+            which only Windows has (docs/development-plan.md §7). */}
+        {platform === 'win' && <h2>{t('settings.general')}</h2>}
+        {platform === 'win' && (
         <div className="set-group">
           <Row label={t('settings.hotkey')} hint={t('settings.hotkeyHint')}>
             <Segmented
@@ -98,6 +101,7 @@ export function SettingsApp({ platform }: { platform: Platform }) {
             <Switch checked={s.tray} label={t('settings.tray')} onChange={(tray) => save({ ...s, tray })} />
           </Row>
         </div>
+        )}
         <h2>{t('settings.appearance')}</h2>
         <div className="set-group">
           <Row label={t('settings.language')}>

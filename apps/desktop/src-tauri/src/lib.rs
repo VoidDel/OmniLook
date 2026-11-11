@@ -19,9 +19,11 @@ mod agent;
 mod client;
 #[cfg(windows)]
 mod system;
+#[cfg(not(windows))]
+#[path = "system_unix.rs"]
+mod system;
 #[cfg(windows)]
 mod tray;
-#[cfg(windows)]
 mod ui;
 #[cfg(windows)]
 mod win_icon;
@@ -51,8 +53,36 @@ pub fn main() -> ExitCode {
     }
 }
 
+/// Elsewhere than on Windows (Linux, `docs/development-plan.md` §7) there is no agent and no
+/// hotkey: `omnilook <file>` opens a preview window of its own (a file manager's custom action
+/// runs it), `omnilook` the settings.
 #[cfg(not(windows))]
 pub fn main() -> ExitCode {
-    eprintln!("Omni Look runs on Windows (docs/development-plan.md §7)");
-    ExitCode::FAILURE
+    use cli::{Mode, ViewArgs};
+    match cli::parse(std::env::args_os().skip(1)) {
+        Mode::View(args) => ui::run_view(args),
+        Mode::Preview { path, title, .. } => {
+            let path = std::path::absolute(&path).unwrap_or(path);
+            if !path.exists() {
+                eprintln!("omnilook: {} does not exist", path.display());
+                return ExitCode::from(2);
+            }
+            ui::run_view(ViewArgs {
+                path,
+                title,
+                anchor: None,
+                gpu: false,
+            })
+        }
+        Mode::Settings => ui::run_settings(),
+        Mode::Quit => ExitCode::SUCCESS,
+        Mode::Agent => {
+            eprintln!("omnilook: the agent (hotkey) is for Windows; run omnilook <file>");
+            ExitCode::from(2)
+        }
+        Mode::Usage(msg) => {
+            eprintln!("{msg}");
+            ExitCode::from(2)
+        }
+    }
 }

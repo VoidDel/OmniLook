@@ -14,6 +14,19 @@ use tauri::{
 
 use super::ViewState;
 
+/// Where the page reaches `look://`: WebView2 maps custom schemes to `http://<scheme>.localhost`,
+/// WebKitGTK keeps the scheme.
+#[cfg(windows)]
+pub const BASE: &str = "http://look.localhost";
+#[cfg(not(windows))]
+pub const BASE: &str = "look://localhost";
+
+/// The page's own origin, allowed to fetch from `look://`.
+#[cfg(windows)]
+const ORIGIN: &str = "http://tauri.localhost";
+#[cfg(not(windows))]
+const ORIGIN: &str = "tauri://localhost";
+
 /// Largest piece sent for one range request.
 const CHUNK: u64 = 8 << 20;
 /// Largest file sent whole when no range is asked for (images, PDF).
@@ -174,6 +187,9 @@ fn range(req: &Request<Vec<u8>>) -> Option<(u64, Option<u64>)> {
 fn respond(path: &Path, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
     // HEIC / HEIF: decoded by Windows (the HEIF extension), sent as PNG.
     if omnilook_core::image::system_decoded(path) {
+        #[cfg(not(windows))]
+        return status(StatusCode::UNSUPPORTED_MEDIA_TYPE);
+        #[cfg(windows)]
         return match omnilook_win::wic::decode(path, omnilook_core::image::MAX_SIDE)
             .map_err(|e| e.to_string())
             .and_then(|i| {
@@ -223,7 +239,7 @@ fn respond(path: &Path, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
         .status(code)
         .header("Content-Type", mime(path))
         .header("Accept-Ranges", "bytes")
-        .header("Access-Control-Allow-Origin", "http://tauri.localhost")
+        .header("Access-Control-Allow-Origin", ORIGIN)
         .header("Cache-Control", "no-store")
         .header("Content-Length", n.to_string());
     if code == StatusCode::PARTIAL_CONTENT {
