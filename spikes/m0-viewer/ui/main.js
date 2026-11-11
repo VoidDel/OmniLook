@@ -76,6 +76,8 @@ function render(p) {
       const div = document.createElement('div');
       div.className = 'handler';
       stage.append(div);
+      invoke('page_log', { line: 'handler: rendered, waiting for frames' });
+      afterPaint(() => invoke('page_log', { line: 'handler: frames done' }));
       afterPaint(() =>
         invoke('host_handler', { id: p.id, ...handlerRect() })
           .then((info) => done('handler', info))
@@ -92,13 +94,16 @@ function render(p) {
   }
 }
 
-listen('preview', (e) => render(e.payload));
-listen('clear', () => {
-  cur = null;
-  stage.replaceChildren();
-  nameEl.textContent = '—';
-  metaEl.textContent = '';
-});
+// Report ready only once both listeners are registered: an event emitted earlier is lost.
+const listening = Promise.all([
+  listen('preview', (e) => render(e.payload)),
+  listen('clear', () => {
+    cur = null;
+    stage.replaceChildren();
+    nameEl.textContent = '—';
+    metaEl.textContent = '';
+  }),
+]);
 
 window.addEventListener('resize', () => {
   if (cur?.kind === 'handler') invoke('handler_rect', handlerRect());
@@ -134,5 +139,7 @@ const types = {
 };
 const probe = document.createElement('video');
 const can = Object.entries(types).map(([k, t]) => `${k}=${probe.canPlayType(t) || 'no'}`);
-invoke('page_log', { line: `ready after ${performance.now().toFixed(0)} ms; canPlayType ${can.join(', ')}` });
-invoke('page_log', { line: navigator.userAgent });
+listening.then(() => {
+  invoke('page_log', { line: `ready after ${performance.now().toFixed(0)} ms; canPlayType ${can.join(', ')}` });
+  invoke('page_log', { line: navigator.userAgent });
+});

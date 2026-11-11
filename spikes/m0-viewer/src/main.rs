@@ -62,6 +62,8 @@ mod app {
         next: AtomicU64,
         log: Mutex<std::fs::File>,
         start: Instant,
+        /// The file from the command line, shown once the page is ready (cold start).
+        pending: Mutex<Option<(PathBuf, Option<&'static str>)>>,
     }
 
     impl M0 {
@@ -353,7 +355,24 @@ mod app {
 
     #[tauri::command]
     fn page_log(app: AppHandle, line: String) {
-        app.state::<Arc<M0>>().log(format!("page: {line}"));
+        let st = app.state::<Arc<M0>>();
+        st.log(format!("page: {line}"));
+        if line.starts_with("ready")
+            && let Some((p, force)) = st.pending.lock().unwrap().take()
+        {
+            // Times from process start: the whole cold path.
+            preview(&app, p, st.start, "cold", None, force);
+        }
+    }
+
+    /// GPU acceleration only for video (H.265 needs the hardware decoder); everything else
+    /// runs without it, which halves WebView2's memory.  overrides.
+    fn wants_gpu(file: Option<&Path>) -> bool {
+        match std::env::var("M0_GPU").as_deref() {
+            Ok("1") => true,
+            Ok("0") => false,
+            _ => file.is_some_and(|f| kind(f) == "video"),
+        }
     }
 
     #[tauri::command]
@@ -387,7 +406,7 @@ mod app {
             right: x + w,
             bottom: y + h,
         };
-        let r = host::show(parent, &path, rect);
+        let r = host::show(parent, &path, rect, &|s| st.log(format!("#{id} handler step {s}")));
         st.log(format!("#{id} handler: {r:?}"));
         r
     }
@@ -426,6 +445,7 @@ mod app {
                     .expect("log file"),
             ),
             start: Instant::now(),
+            pending: Mutex::new(None),
         });
         st.log(format!("start pid {}", std::process::id()));
         tauri::Builder::default()
@@ -449,7 +469,30 @@ mod app {
                 handler_rect
             ])
             .setup(move |app| {
+                let argv: Vec<String> = std::env::args().collect();
+                let initial = file_arg(&argv);
+                let gpu = wants_gpu(initial.as_ref().map(|(p, _)| p.as_path()));
+                // Different browser arguments need different data directories.
+                let data = std::env::var_os("LOCALAPPDATA")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(std::env::temp_dir)
+                    .join("app.omnilook.m0")
+                    .join(if gpu { "EBWebView-gpu" } else { "EBWebView-cpu" });
+                let mut args = String::from(
+                    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+                );
+                if !gpu {
+                    args.push_str(" --disable-gpu");
+                }
+                if let Ok(extra) = std::env::var("M0_EXTRA_ARGS") {
+                    args.push(' ');
+                    args.push_str(&extra);
+                }
+                st.log(format!("gpu {gpu}, browser args {args}"));
+                *st.pending.lock().unwrap() = initial;
                 WebviewWindowBuilder::new(app, "preview", WebviewUrl::App("index.html".into()))
+                    .additional_browser_args(&args)
+                    .data_directory(data)
                     .title("Omni Look M0")
                     .inner_size(960.0, 680.0)
                     .visible(false)
@@ -477,15 +520,6 @@ mod app {
                         }
                     })?;
                 st.log("hook installed");
-                let argv: Vec<String> = std::env::args().collect();
-                if let Some((p, force)) = file_arg(&argv) {
-                    let handle = app.handle().clone();
-                    std::thread::spawn(move || {
-                        // Let the page load first.
-                        std::thread::sleep(Duration::from_millis(1500));
-                        preview(&handle, p, Instant::now(), "cli", None, force);
-                    });
-                }
                 Ok(())
             })
             .run(tauri::generate_context!())

@@ -91,9 +91,10 @@ pub fn resize(rect: RECT) {
     });
 }
 
-pub fn show(parent: HWND, path: &Path, rect: RECT) -> Result<String, String> {
+pub fn show(parent: HWND, path: &Path, rect: RECT, step: &dyn Fn(&str)) -> Result<String, String> {
     unload();
     let t = Instant::now();
+    step("create");
     let clsid = handler_clsid(path).ok_or("no preview handler registered")?;
     let (handler, how): (IPreviewHandler, &str) =
         match unsafe { CoCreateInstance(&clsid, None, CLSCTX_LOCAL_SERVER) } {
@@ -104,6 +105,8 @@ pub fn show(parent: HWND, path: &Path, rect: RECT) -> Result<String, String> {
             },
         };
     let created = t.elapsed();
+    step(how);
+    step("initialize");
     let file = HSTRING::from(path.as_os_str());
     let init = unsafe {
         if let Ok(i) = handler.cast::<IInitializeWithStream>() {
@@ -121,6 +124,7 @@ pub fn show(parent: HWND, path: &Path, rect: RECT) -> Result<String, String> {
         }
     }
     .map_err(|e| format!("initialize: {e}"))?;
+    step(init);
     let (w, h) = (rect.right - rect.left, rect.bottom - rect.top);
     let child = unsafe {
         CreateWindowExW(
@@ -143,12 +147,17 @@ pub fn show(parent: HWND, path: &Path, rect: RECT) -> Result<String, String> {
         let _ = SetWindowPos(child, Some(HWND_TOP), rect.left, rect.top, w, h, SWP_SHOWWINDOW);
     }
     let inner = RECT { left: 0, top: 0, right: w, bottom: h };
+    step("SetWindow");
     let r = unsafe {
-        handler
-            .SetWindow(child, &inner)
-            .and_then(|_| handler.SetRect(&inner))
-            .and_then(|_| handler.DoPreview())
+        handler.SetWindow(child, &inner).and_then(|_| {
+            step("SetRect");
+            handler.SetRect(&inner)
+        }).and_then(|_| {
+            step("DoPreview");
+            handler.DoPreview()
+        })
     };
+    step("done");
     if let Err(e) = r {
         unsafe {
             let _ = handler.Unload();
