@@ -17,6 +17,7 @@ use omnilook_core::detect;
 use omnilook_win::{
     events::Subscription,
     explorer::{Com, Focus, View},
+    foreground::{self, Home},
     hook::{self, HookEvent},
     pipe,
     trigger::{self, Decision},
@@ -45,6 +46,8 @@ enum Event {
     Request(Request, mpsc::Sender<Reply>),
     /// A preview process ended (closed, crashed or stopped).
     ViewExited(u32),
+    /// Another window came to the front (its handle, as an integer to cross threads).
+    Foreground(isize),
 }
 
 /// Sends an event to the main thread and wakes its message loop.
@@ -88,6 +91,10 @@ struct Agent {
     log: Log,
     view: Option<ViewProc>,
     followed: Option<Followed>,
+    /// The window the preview was opened from (`foreground::stays`).
+    home: Option<Home>,
+    /// Close the preview when another window comes to the front (a setting).
+    close_on_blur: bool,
 }
 
 fn set_hotkey(s: &Settings) {
@@ -125,8 +132,28 @@ impl Agent {
                     self.view_gone();
                 }
             }
+            Event::Foreground(h) => self.foreground(HWND(h as *mut _)),
         }
         true
+    }
+
+    /// Closes the preview once the user has moved to a window other than the preview and the one
+    /// it was opened from.
+    fn foreground(&mut self, hwnd: HWND) {
+        let Some(v) = &self.view else {
+            return;
+        };
+        if !self.close_on_blur {
+            return;
+        }
+        let w = foreground::describe(hwnd);
+        if !foreground::stays(&w, self.home, v.pid) {
+            self.log.line(format!(
+                "foreground {} ({}): closing the preview",
+                w.root_class, w.pid
+            ));
+            self.close_view();
+        }
     }
 
     fn key(&mut self, k: HookEvent) {
@@ -161,6 +188,7 @@ impl Agent {
             .map_err(|e| self.log.line(format!("subscribe: {e}")))
             .ok();
         let window = focus.window();
+        self.home = foreground::home_of(window);
         self.followed = Some(Followed {
             view,
             _sub: sub,
@@ -257,10 +285,11 @@ impl Agent {
             }
         }
         // Another GPU mode, or the preview stopped answering: start again.
-        let followed = self.followed.take();
+        let (followed, home) = (self.followed.take(), self.home);
         let anchor = anchor.or(followed.as_ref().map(|f| f.window));
         self.close_view();
         self.followed = followed;
+        self.home = home;
         self.spawn(path, title, anchor, gpu);
     }
 
@@ -280,6 +309,7 @@ impl Agent {
     fn view_gone(&mut self) {
         self.view = None;
         self.followed = None;
+        self.home = None;
         hook::set_preview_open(false);
     }
 
@@ -312,8 +342,10 @@ impl Agent {
                 if self.view.as_ref().is_some_and(|v| v.want == path) {
                     self.close_view();
                 } else {
-                    // Not from Explorer: nothing to follow.
+                    // Not from Explorer: nothing to follow. The caller's window (OmniZip's,
+                    // a terminal) is in front now, and is where the preview comes from.
                     self.followed = None;
+                    self.home = foreground::current_home();
                     self.show(path, title, None);
                 }
                 Reply::ok()
@@ -356,6 +388,7 @@ impl Agent {
                 let s = Settings::load();
                 set_hotkey(&s);
                 tray::set(s.tray, &system::ui_language(&s.language));
+                self.close_on_blur = s.close_on_blur;
                 Reply::ok()
             }
             Request::Quit => Reply::ok(),
@@ -412,11 +445,17 @@ pub fn run() -> ExitCode {
         }
     };
     tray::set(settings.tray, &system::ui_language(&settings.language));
+    let w = wake.clone();
+    let _watch = foreground::watch(move |h| w.send(Event::Foreground(h.0 as isize)))
+        .map_err(|e| log.line(format!("foreground watch: {e}")))
+        .ok();
     let mut agent = Agent {
         wake,
         log,
         view: None,
         followed: None,
+        home: None,
+        close_on_blur: settings.close_on_blur,
     };
     let mut msg = MSG::default();
     unsafe {

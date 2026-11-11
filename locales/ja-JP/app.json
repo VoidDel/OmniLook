@@ -29,7 +29,9 @@
     "lightTheme": "ライトテーマ",
     "darkTheme": "ダークテーマ",
     "tray": "通知領域にアイコンを表示",
-    "trayHint": "オフのときは、スタートメニューから Omni Look をもう一度起動するとこの画面が開きます"
+    "trayHint": "オフのときは、スタートメニューから Omni Look をもう一度起動するとこの画面が開きます",
+    "closeOnBlur": "フォーカスを失ったらプレビューを閉じる",
+    "closeOnBlurHint": "ほかのウィンドウに切り替えると閉じます。プレビューと開いたウィンドウの間の切り替えでは閉じません"
   },
   "archive": {
     "summary": "ファイル {files} 個、フォルダー {folders} 個、合計 {size}",

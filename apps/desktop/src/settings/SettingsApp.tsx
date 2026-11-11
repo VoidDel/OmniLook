@@ -88,6 +88,9 @@ export function SettingsApp({ platform }: { platform: Platform }) {
               onChange={(hotkey) => save({ ...s, hotkey })}
             />
           </Row>
+          <Row label={t('settings.closeOnBlur')} hint={t('settings.closeOnBlurHint')}>
+            <Switch checked={s.closeOnBlur} label={t('settings.closeOnBlur')} onChange={(closeOnBlur) => save({ ...s, closeOnBlur })} />
+          </Row>
           <Row label={t('settings.autostart')} hint={t('settings.autostartHint')}>
             <Switch checked={s.autostart} label={t('settings.autostart')} onChange={(autostart) => save({ ...s, autostart })} />
           </Row>

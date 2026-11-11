@@ -34,6 +34,8 @@ export interface Settings {
   autostart: boolean;
   /** The notification-area icon. */
   tray: boolean;
+  /** Close the preview when another window comes to the front. */
+  closeOnBlur: boolean;
   language: string;
   /** Null until saved once. */
   appearance: Appearance | null;

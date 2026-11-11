@@ -25,6 +25,9 @@ pub struct Settings {
     /// Show the notification-area icon (off by default: starting Omni Look again opens the
     /// settings).
     pub tray: bool,
+    /// Close the preview when another window comes to the front (anything but the preview and the
+    /// window it was opened from).
+    pub close_on_blur: bool,
     /// `auto` or a language tag.
     pub language: String,
     /// The page's appearance settings (mode, themes, accent), opaque here.
@@ -37,6 +40,7 @@ impl Default for Settings {
             hotkey: Hotkey::default(),
             autostart: true,
             tray: false,
+            close_on_blur: true,
             language: "auto".into(),
             appearance: serde_json::Value::Null,
         }
@@ -77,6 +81,7 @@ mod tests {
         let s: Settings = serde_json::from_str(r#"{"hotkey":"space"}"#).unwrap();
         assert_eq!(s.hotkey, Hotkey::Space);
         assert!(s.autostart, "missing fields take their defaults");
+        assert!(s.close_on_blur);
         let s: Settings = serde_json::from_str("{}").unwrap();
         assert_eq!(s, Settings::default());
     }

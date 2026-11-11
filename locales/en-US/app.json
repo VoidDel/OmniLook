@@ -29,7 +29,9 @@
     "lightTheme": "Light theme",
     "darkTheme": "Dark theme",
     "tray": "Show the notification-area icon",
-    "trayHint": "When it is off, start Omni Look again from the Start menu to open this window"
+    "trayHint": "When it is off, start Omni Look again from the Start menu to open this window",
+    "closeOnBlur": "Close the preview when it loses focus",
+    "closeOnBlurHint": "Closes when another window comes to the front; moving between the preview and the window it was opened from keeps it"
   },
   "archive": {
     "summary": "{files, plural, one {# file} other {# files}}, {folders, plural, one {# folder} other {# folders}}, {size} in all",

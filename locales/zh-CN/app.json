@@ -29,7 +29,9 @@
     "lightTheme": "浅色主题",
     "darkTheme": "深色主题",
     "tray": "显示托盘图标",
-    "trayHint": "关闭时，再次从开始菜单启动 Omni Look 即打开这个窗口"
+    "trayHint": "关闭时，再次从开始菜单启动 Omni Look 即打开这个窗口",
+    "closeOnBlur": "失去焦点时关闭预览",
+    "closeOnBlurHint": "切换到其他窗口时自动关闭；在预览窗口和打开它的窗口之间切换不受影响"
   },
   "archive": {
     "summary": "{files} 个文件，{folders} 个文件夹，共 {size}",
