@@ -14,6 +14,10 @@ pub enum Request {
         path: PathBuf,
         #[serde(default)]
         title: Option<String>,
+        /// The caller's pipe for the previous / next file (OmniZip inside an archive, protocol
+        /// v2, `docs/development-plan.md` §6.3).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        nav: Option<String>,
     },
     /// A preview process is ready for files on `pipe`.
     ViewReady {
@@ -45,6 +49,27 @@ pub enum ViewCommand {
         title: Option<String>,
     },
     Close,
+}
+
+/// To the caller's navigation pipe (§6.3): the file next to `path`, the one it gave last.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NavAsk {
+    /// `next` or `prev`.
+    pub op: String,
+    pub path: PathBuf,
+}
+
+/// Its answer: the file and its title, or `end` when there is none that way.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct NavAnswer {
+    #[serde(default)]
+    pub path: Option<PathBuf>,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub end: bool,
+    #[serde(default)]
+    pub error: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -87,6 +112,7 @@ mod tests {
         let r = Request::Preview {
             path: PathBuf::from(r"C:\a.txt"),
             title: Some("t".into()),
+            nav: None,
         };
         assert_eq!(
             serde_json::to_string(&r).unwrap(),
@@ -98,5 +124,12 @@ mod tests {
         let r: Request = serde_json::from_str(r#"{"op":"preview","path":"x"}"#).unwrap();
         assert!(matches!(r, Request::Preview { title: None, .. }));
         assert!(!Reply::parse("garbage").ok);
+        // The caller's navigation answers (§6.3).
+        let a: NavAnswer =
+            serde_json::from_str(r#"{"path":"C:\\b.txt","title":"x › b.txt"}"#).unwrap();
+        assert_eq!(a.path, Some(PathBuf::from(r"C:\b.txt")));
+        assert_eq!(a.title.as_deref(), Some("x › b.txt"));
+        let a: NavAnswer = serde_json::from_str(r#"{"end":true}"#).unwrap();
+        assert!(a.end && a.path.is_none());
     }
 }

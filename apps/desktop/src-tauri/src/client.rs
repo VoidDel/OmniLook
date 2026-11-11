@@ -85,7 +85,7 @@ pub fn ensure_agent() -> bool {
     false
 }
 
-pub fn preview(path: PathBuf, title: Option<String>) -> ExitCode {
+pub fn preview(path: PathBuf, title: Option<String>, nav: Option<String>) -> ExitCode {
     let path = std::path::absolute(&path).unwrap_or(path);
     if !path.exists() {
         eprintln!("omnilook: {} does not exist", path.display());
@@ -95,7 +95,10 @@ pub fn preview(path: PathBuf, title: Option<String>) -> ExitCode {
         eprintln!("omnilook: the agent did not start");
         return ExitCode::FAILURE;
     }
-    let r = send(&Request::Preview { path, title }, Duration::from_secs(5));
+    let r = send(
+        &Request::Preview { path, title, nav },
+        Duration::from_secs(5),
+    );
     if r.ok {
         ExitCode::SUCCESS
     } else {

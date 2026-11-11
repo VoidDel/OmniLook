@@ -36,7 +36,7 @@ use windows::Win32::{
 
 use crate::{
     paths,
-    protocol::{Reply, Request, ViewCommand},
+    protocol::{NavAnswer, NavAsk, Reply, Request, ViewCommand},
     settings::{Hotkey, Settings},
     system::{self, Log},
     tray,
@@ -51,6 +51,11 @@ enum Event {
     ViewExited(u32),
     /// Another window came to the front (its handle, as an integer to cross threads).
     Foreground(isize),
+    /// The caller answered which file is next to `from` (§6.3).
+    NavDone {
+        from: PathBuf,
+        answer: Option<NavAnswer>,
+    },
 }
 
 /// Sends an event to the main thread and wakes its message loop.
@@ -101,6 +106,10 @@ struct Agent {
     opened: Option<Instant>,
     /// Close the preview when another window comes to the front (a setting).
     close_on_blur: bool,
+    /// The caller's pipe for the previous / next file (OmniZip inside an archive, §6.3).
+    caller_nav: Option<String>,
+    /// A question to it is under way: further arrow keys wait for its answer.
+    nav_busy: bool,
 }
 
 fn set_hotkey(s: &Settings) {
@@ -136,6 +145,21 @@ impl Agent {
                 if self.view.as_ref().is_some_and(|v| v.pid == pid) {
                     self.log.line(format!("view {pid} exited"));
                     self.view_gone();
+                }
+            }
+            Event::NavDone { from, answer } => {
+                self.nav_busy = false;
+                let current = self.view.as_ref().is_some_and(|v| v.want == from);
+                match answer {
+                    Some(NavAnswer {
+                        path: Some(path),
+                        title,
+                        ..
+                    }) if current => self.show(path, title, None),
+                    Some(NavAnswer { error: Some(e), .. }) => {
+                        self.log.line(format!("caller's navigation: {e}"));
+                    }
+                    _ => {}
                 }
             }
             Event::Foreground(h) => self.foreground(HWND(h as *mut _)),
@@ -300,11 +324,13 @@ impl Agent {
         }
         // Another GPU mode, or the preview stopped answering: start again.
         let (followed, home, opened) = (self.followed.take(), self.home, self.opened);
+        let caller_nav = self.caller_nav.take();
         let anchor = anchor.or(followed.as_ref().map(|f| f.window));
         self.close_view();
         self.followed = followed;
         self.home = home;
         self.opened = opened;
+        self.caller_nav = caller_nav;
         self.spawn(path, title, anchor, gpu);
     }
 
@@ -324,6 +350,7 @@ impl Agent {
     fn view_gone(&mut self) {
         self.view = None;
         self.followed = None;
+        self.caller_nav = None;
         self.home = None;
         self.opened = None;
         hook::set_preview_open(false);
@@ -332,6 +359,29 @@ impl Agent {
     /// The file `step` away from the one shown, in the order Explorer shows them; selecting it
     /// there makes the preview follow, as an arrow key in Explorer would.
     fn nav(&mut self, step: i32) -> Reply {
+        // From OmniZip inside an archive: ask it, off this thread (it may unpack the file).
+        if self.followed.is_none()
+            && let (Some(pipe), Some(v)) = (self.caller_nav.clone(), &self.view)
+        {
+            if self.nav_busy {
+                return Reply::ok();
+            }
+            self.nav_busy = true;
+            let from = v.want.clone();
+            let ask = NavAsk {
+                op: if step < 0 { "prev" } else { "next" }.into(),
+                path: from.clone(),
+            };
+            let wake = self.wake.clone();
+            std::thread::spawn(move || {
+                let line = serde_json::to_string(&ask).unwrap_or_default();
+                let answer = pipe::request(&pipe, &line, Duration::from_secs(2))
+                    .ok()
+                    .and_then(|a| serde_json::from_str::<NavAnswer>(&a).ok());
+                wake.send(Event::NavDone { from, answer });
+            });
+            return Reply::ok();
+        }
         let (Some(f), Some(v)) = (&self.followed, &self.view) else {
             return Reply::err("not following an Explorer view");
         };
@@ -354,7 +404,7 @@ impl Agent {
     fn request(&mut self, r: Request) -> Reply {
         match r {
             Request::Ping => Reply::ok(),
-            Request::Preview { path, title } => {
+            Request::Preview { path, title, nav } => {
                 if self.view.as_ref().is_some_and(|v| v.want == path) {
                     self.close_view();
                 } else {
@@ -363,6 +413,7 @@ impl Agent {
                     self.followed = None;
                     self.home = foreground::current_home();
                     self.opened = Some(Instant::now());
+                    self.caller_nav = nav;
                     self.show(path, title, None);
                 }
                 Reply::ok()
@@ -446,7 +497,7 @@ pub fn run() -> ExitCode {
         // Another agent has the pipe.
         return ExitCode::SUCCESS;
     }
-    log.line(format!("agent {} started", std::process::id()));
+    log.line(format!("agent {} started on {name}", std::process::id()));
     let settings = Settings::load();
     set_hotkey(&settings);
     // Starting with Windows is the installer's and the settings window's business.
@@ -480,6 +531,8 @@ pub fn run() -> ExitCode {
         followed: None,
         home: None,
         opened: None,
+        caller_nav: None,
+        nav_busy: false,
         close_on_blur: settings.close_on_blur,
     };
     let mut msg = MSG::default();

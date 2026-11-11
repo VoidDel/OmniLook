@@ -26,7 +26,7 @@ use windows::{
 use crate::paths;
 
 /// The calling protocol version OmniZip checks (`docs/development-plan.md` §6.2).
-pub const PROTOCOL_VERSION: u32 = 1;
+pub const PROTOCOL_VERSION: u32 = 2;
 
 const RUN: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 const RUN_NAME: &str = "Omni Look";

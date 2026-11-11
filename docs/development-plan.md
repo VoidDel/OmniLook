@@ -264,19 +264,19 @@ omnilook.exe preview <文件> [--title <显示的名称>] [--source omnizip]
 
 ### 6.3 压缩包内左右切换（协议 v2，M2）
 
-OmniZip 额外传入 `--nav \\.\pipe\omnizip-nav-<id>`。Omni Look 按左右键时经命名管道发送一行 JSON 请求：
+Omni Look 2 登记 `ProtocolVersion = 2`。OmniZip 读到 ≥ 2 时额外传入 `--nav \\.\pipe\omnizip-nav-<OmniZip 进程号>-<用户 SID>`（Omni Look 只接受 `\\.\pipe\` 开头的值）。预览窗口里按左右键时，代理在后台线程上经这个管道发送一行 JSON（不阻塞代理）：
 
 ```json
-{"op":"next","current":"<条目 id>"}
+{"op":"next","path":"<当前显示的缓存文件>"}
 ```
 
-OmniZip 解压相邻条目后回复：
+`op` 为 `next` 或 `prev`。请求里用的是 OmniZip 交出去的缓存文件路径，而不是条目 id：OmniZip 记得每个缓存文件对应哪个条目，命令行就不必多一个参数。OmniZip 按列表当前的排序找同一文件夹里的相邻文件（跳过文件夹），解压到缓存后回复，并让列表的选中项跟过去：
 
 ```json
-{"id":"<条目 id>","path":"<缓存文件>","title":"<压缩包名 › 包内路径>"}
+{"path":"<缓存文件>","title":"<压缩包名 › 包内路径>"}
 ```
 
-没有相邻文件时回复 `{"end":true}`。管道只接受同一用户会话的连接。
+没有相邻文件时回复 `{"end":true}`，出错时回复 `{"error":"…"}`。Omni Look 收到回复时若用户已切到别的文件则丢弃。管道只接受同一用户的连接（DACL），Omni Look 连接时也核对服务端进程属于同一用户。一次只问一个，问的过程中再按方向键会被忽略。
 
 ### 6.4 OmniZip 侧的改动
 

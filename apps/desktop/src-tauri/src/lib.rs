@@ -4,7 +4,7 @@
 //! |---|---|
 //! | `omnilook --agent` | resident agent: the hotkey hook and the pipe, no WebView |
 //! | `omnilook --view --path <file> …` | one preview window; started by the agent, exits on close |
-//! | `omnilook preview <file> [--title …]` / `omnilook <file>` | asks the agent to preview (OmniZip) |
+//! | `omnilook preview <file> [--title …] [--nav <pipe>]` / `omnilook <file>` | asks the agent to preview (OmniZip) |
 //! | `omnilook` | starts the agent if needed and opens the settings window |
 //! | `omnilook --quit` | stops the agent and its preview |
 
@@ -42,7 +42,7 @@ pub fn main() -> ExitCode {
             }
             ui::run_settings()
         }
-        Mode::Preview { path, title } => client::preview(path, title),
+        Mode::Preview { path, title, nav } => client::preview(path, title, nav),
         Mode::Quit => client::quit(),
         Mode::Usage(msg) => {
             eprintln!("{msg}");

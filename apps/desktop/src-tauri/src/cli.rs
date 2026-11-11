@@ -20,12 +20,15 @@ pub enum Mode {
     Preview {
         path: PathBuf,
         title: Option<String>,
+        /// The caller's pipe for the previous / next file (§6.3).
+        nav: Option<String>,
     },
     Quit,
     Usage(String),
 }
 
-const USAGE: &str = "usage: omnilook [preview] <file> [--title <text>] | omnilook --quit";
+const USAGE: &str =
+    "usage: omnilook [preview] <file> [--title <text>] [--nav <pipe>] | omnilook --quit";
 
 pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
     let args: Vec<OsString> = args.into_iter().collect();
@@ -43,6 +46,10 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
         return Mode::Quit;
     }
     let title = value("--title").map(|t| t.to_string_lossy().into_owned());
+    let nav = value("--nav")
+        .map(|t| t.to_string_lossy().into_owned())
+        // Only a local named pipe.
+        .filter(|n| n.starts_with(r"\\.\pipe\"));
     if flag("--view") {
         let Some(path) = value("--path") else {
             return Mode::Usage("--view needs --path".into());
@@ -60,7 +67,7 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
     while i < args.len() {
         let a = args[i].to_string_lossy();
         // Flags with a value (`--source` names the caller; accepted, not used yet).
-        if a == "--title" || a == "--source" {
+        if a == "--title" || a == "--source" || a == "--nav" {
             i += 2;
             continue;
         }
@@ -74,10 +81,12 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Mode {
         [cmd, file] if cmd == "preview" => Mode::Preview {
             path: PathBuf::from(file),
             title,
+            nav,
         },
         [file] if file != "preview" => Mode::Preview {
             path: PathBuf::from(file),
             title,
+            nav,
         },
         _ => Mode::Usage(USAGE.into()),
     }
@@ -100,14 +109,16 @@ mod tests {
             p(&["preview", r"C:\a b.txt", "--title", "x.zip › a b.txt"]),
             Mode::Preview {
                 path: PathBuf::from(r"C:\a b.txt"),
-                title: Some("x.zip › a b.txt".into())
+                title: Some("x.zip › a b.txt".into()),
+                nav: None
             }
         );
         assert_eq!(
             p(&["C:\\x.png"]),
             Mode::Preview {
                 path: PathBuf::from("C:\\x.png"),
-                title: None
+                title: None,
+                nav: None
             }
         );
         assert_eq!(
@@ -123,9 +134,23 @@ mod tests {
             p(&["preview", "C:\\a.txt", "--source", "omnizip"]),
             Mode::Preview {
                 path: PathBuf::from("C:\\a.txt"),
-                title: None
+                title: None,
+                nav: None
             }
         );
+        assert_eq!(
+            p(&["preview", r"C:\c.txt", "--nav", r"\\.\pipe\omnizip-nav-1"]),
+            Mode::Preview {
+                path: PathBuf::from(r"C:\c.txt"),
+                title: None,
+                nav: Some(r"\\.\pipe\omnizip-nav-1".into())
+            }
+        );
+        // Only a named pipe.
+        assert!(matches!(
+            p(&["preview", r"C:\c.txt", "--nav", r"C:\x"]),
+            Mode::Preview { nav: None, .. }
+        ));
         assert!(matches!(p(&["preview"]), Mode::Usage(_)));
         assert!(matches!(p(&["a", "b"]), Mode::Usage(_)));
     }
