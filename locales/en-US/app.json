@@ -61,5 +61,11 @@
   "hex": {
     "binary": "Binary file",
     "first": "Binary file, first 4 KB shown"
+  },
+  "office": {
+    "simple": "Simple preview (without Office)",
+    "sheets": "{count, plural, one {# sheet} other {# sheets}}",
+    "slides": "{count, plural, one {# slide} other {# slides}}",
+    "emptySlide": "(no text)"
   }
 }

@@ -14,7 +14,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use omnilook_core::{Kind, archive, audio, detect, folder, hex, markdown, text};
+use omnilook_core::{Kind, archive, audio, detect, folder, hex, markdown, office, text};
 use omnilook_win::{events::window_rect, handler, pipe};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -371,9 +371,30 @@ async fn read_audio(
 /// for handlers that has none here (Word files without Office) gets the file card from the page.
 fn view_kind(path: &std::path::Path) -> Kind {
     match detect(path) {
-        Kind::Binary if handler::available(path) => Kind::Handler,
+        Kind::Binary if handlers(path) => Kind::Handler,
+        // Word, Excel, PowerPoint without Office: their text, read here.
+        Kind::Handler if !handlers(path) && office::handles(path) => Kind::Office,
         k => k,
     }
+}
+
+/// Whether the system has a preview handler for the file. A test can pretend it has none
+/// (`OMNILOOK_NO_HANDLERS`, isolated instances only), to see what a computer without Office shows.
+fn handlers(path: &std::path::Path) -> bool {
+    if paths::isolated() && std::env::var_os("OMNILOOK_NO_HANDLERS").is_some() {
+        return false;
+    }
+    handler::available(path)
+}
+
+/// Word, Excel or PowerPoint text without Office (`office::read`).
+#[tauri::command]
+async fn read_office(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<office::OfficePreview, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || office::read(&path)).await
 }
 
 /// Shows the file with its system preview handler over the page's area (`x`, `y`, `w`, `h` in
@@ -539,6 +560,7 @@ fn run(role: Role) -> ExitCode {
             read_archive,
             read_markdown,
             read_audio,
+            read_office,
             host_show,
             host_area,
             host_unload,

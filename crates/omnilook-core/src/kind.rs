@@ -21,6 +21,8 @@ pub enum Kind {
     Folder,
     /// A type the system has a preview handler for (Office and the like).
     Handler,
+    /// Word, Excel or PowerPoint read without Office (`office`), when no handler shows it.
+    Office,
     Binary,
 }
 

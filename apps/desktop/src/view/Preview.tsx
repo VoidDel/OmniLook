@@ -12,6 +12,7 @@ import { FolderView } from './FolderView';
 import { HandlerView } from './HandlerView';
 import { MarkdownView } from './MarkdownView';
 import { MediaView } from './MediaView';
+import { OfficeView } from './OfficeView';
 import { TextView } from './TextView';
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
@@ -83,6 +84,8 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
       return <ArchiveView shown={shown} onMeta={onMeta} />;
     case 'folder':
       return <FolderView shown={shown} onMeta={onMeta} />;
+    case 'office':
+      return <OfficeView shown={shown} onMeta={onMeta} />;
     case 'handler':
       return <HandlerView shown={shown} onMeta={onMeta} />;
     case 'binary':

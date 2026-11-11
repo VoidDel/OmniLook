@@ -130,6 +130,24 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-md .footnote-definition:first-of-type { border-top: 1px solid var(--border-subtle); padding-top: .8em; }
 .look-md .footnote-definition p { margin: 0; }
 
+/* Office without Office: a document (the Markdown page's look), slides, a sheet. */
+.look-doc { max-width: 820px; }
+.look-slides { max-width: 860px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 14px; }
+.look-slide { position: relative; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 18px 14px 52px; background: var(--bg-surface, transparent); }
+.look-slide .no { position: absolute; left: 16px; top: 14px; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+.look-slide h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.look-slide p { margin: 4px 0; color: var(--fg-secondary); }
+.look-slide .dim { color: var(--fg-muted); }
+.look-sheet { display: flex; flex-direction: column; min-height: 0; }
+.look-sheet-grid { flex: 1; min-height: 0; overflow: auto; user-select: text; }
+.look-sheet-grid table { border-collapse: collapse; font-size: .85rem; }
+.look-sheet-grid :is(th, td) { border: 1px solid var(--border-subtle); padding: 3px 8px; white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.look-sheet-grid th { position: sticky; top: 0; background: var(--bg-subtle); color: var(--fg-muted); font-weight: 500; }
+.look-sheet-grid tbody th { left: 0; text-align: right; }
+.look-sheet-tabs { flex: none; display: flex; gap: 2px; padding: 4px 8px; border-top: 1px solid var(--border-subtle); overflow-x: auto; }
+.look-sheet-tabs button { padding: 3px 12px; border-radius: 6px; color: var(--fg-secondary); font-size: .82rem; white-space: nowrap; }
+.look-sheet-tabs button[aria-selected="true"] { background: var(--bg-surface); color: var(--fg-primary); box-shadow: var(--shadow-1); }
+
 /* The system preview handler's window lies over this box. */
 .look-host { display: flex; background: var(--bg-canvas); color: var(--fg-primary); }
 .look-host > * { flex: 1; }

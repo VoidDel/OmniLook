@@ -2,7 +2,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
-export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'binary';
+export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'binary';
 
 /** The file a preview shows. */
 export interface Shown {
@@ -72,6 +72,23 @@ export interface HostArea {
   h: number;
 }
 
+/** Word / Excel / PowerPoint text without Office (crates/omnilook-core/src/office.rs). */
+export interface OfficeRun {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+export type OfficeBlock = { kind: 'para'; level: number; list: boolean; runs: OfficeRun[] } | { kind: 'table'; rows: string[][] };
+export interface OfficeSheet {
+  name: string;
+  rows: string[][];
+  truncated: boolean;
+}
+export type OfficePreview =
+  | { type: 'word'; blocks: OfficeBlock[]; truncated: boolean }
+  | { type: 'excel'; sheets: OfficeSheet[] }
+  | { type: 'powerPoint'; slides: string[][]; truncated: boolean };
+
 /** Markdown rendered in Rust and cleaned there (crates/omnilook-core/src/markdown.rs). */
 export interface MarkdownPreview {
   html: string;
@@ -127,6 +144,7 @@ export const api = {
   /** Flat [start, length, class] triples in UTF-16 units. */
   highlight: (id: number) => invoke<number[]>('highlight', { id }),
   readHex: (id: number) => invoke<HexPreview>('read_hex', { id }),
+  readOffice: (id: number) => invoke<OfficePreview>('read_office', { id }),
   readAudio: (id: number) => invoke<AudioInfo>('read_audio', { id }),
   /** A system preview handler over the page's area (window pixels); colours as 0x00BBGGRR. */
   hostShow: (id: number, area: HostArea, bg: number | null, fg: number | null) => invoke<string>('host_show', { id, ...area, bg, fg }),

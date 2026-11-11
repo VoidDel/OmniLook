@@ -61,5 +61,11 @@
   "hex": {
     "binary": "二進位檔案",
     "first": "二進位檔案，顯示前 4 KB"
+  },
+  "office": {
+    "simple": "簡易預覽（未使用 Office）",
+    "sheets": "{count} 個工作表",
+    "slides": "{count} 張投影片",
+    "emptySlide": "（沒有文字）"
   }
 }

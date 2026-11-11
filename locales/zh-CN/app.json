@@ -61,5 +61,11 @@
   "hex": {
     "binary": "二进制文件",
     "first": "二进制文件，显示前 4 KB"
+  },
+  "office": {
+    "simple": "简易预览（未使用 Office）",
+    "sheets": "{count} 个工作表",
+    "slides": "{count} 张幻灯片",
+    "emptySlide": "（没有文字）"
   }
 }

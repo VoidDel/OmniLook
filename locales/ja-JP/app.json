@@ -61,5 +61,11 @@
   "hex": {
     "binary": "バイナリファイル",
     "first": "バイナリファイル（先頭 4 KB を表示）"
+  },
+  "office": {
+    "simple": "簡易プレビュー（Office なし）",
+    "sheets": "{count} シート",
+    "slides": "{count} スライド",
+    "emptySlide": "（テキストなし）"
   }
 }
