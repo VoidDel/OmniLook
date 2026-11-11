@@ -24,9 +24,8 @@ pnpm build            # 安装包，输出在 target/release/bundle/nsis
 |---|---|
 | `apps/desktop/` | Tauri 应用：`src/` 为 React 前端（预览窗口、设置），`src-tauri/` 为 Rust 外壳 |
 | `crates/omnilook-core` | 类型识别与各类预览器（平台无关） |
-| `crates/omnilook-win` | 键盘钩子、资源管理器集成、系统预览程序宿主 |
+| `crates/omnilook-win` | 键盘钩子、资源管理器选中项与选中变化、命名管道 |
 | `locales/` | 简体中文（源）、繁體中文、English、日本語 |
-| `themes/` | omni-ui 内置主题的副本 |
 | `docs/` | 开发方案与设计文档 |
 
 ## 许可
