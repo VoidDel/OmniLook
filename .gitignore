@@ -1,0 +1,35 @@
+# Rust
+/target/
+**/target/
+*.pdb
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# Tauri
+apps/desktop/src-tauri/gen/schemas/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Local
+.env
+.env.local
+fixtures/generated/
+apps/desktop/src-tauri/binaries/
+# Signing keys stay out of the repository; only public certificates (.cer) are committed.
+*.pfx
+
+# Fuzzing (cargo-fuzz)
+fuzz/corpus/
+fuzz/artifacts/
+fuzz/coverage/
