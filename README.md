@@ -4,9 +4,21 @@ Windows 上的快速预览：在资源管理器或桌面选中文件按 Ctrl+空
 
 装了 Omni Look 时，OmniZip 中预览压缩包里的文件也交给它显示。
 
-> 当前进度：**M0 原型验证**。方案、架构与路线图见 [开发方案](docs/development-plan.md)，原型结果见 [M0 验证结果](docs/m0-results.md)。
+> 当前进度：**M1 进行中**。常驻代理与快捷键、按需启动的预览窗口、文本与代码高亮、图片、PDF、音视频、压缩包目录树、文件夹、十六进制、设置与托盘、NSIS 安装包已完成；OmniZip 接入待做。方案见 [开发方案](docs/development-plan.md)，原型结果见 [M0 验证结果](docs/m0-results.md)。
 
-## 规划的目录
+## 开发
+
+需要 Rust stable、Node 22+、pnpm 10。
+
+```bash
+pnpm install
+pnpm dev              # 开发窗口（Vite 端口 1440）
+pnpm build            # 安装包，输出在 target/release/bundle/nsis
+```
+
+测试时设置 `OMNILOOK_HOME=<目录>`：设置、WebView2 配置与日志都放在那里，也不写注册表。
+
+## 目录
 
 | 路径 | 内容 |
 |---|---|
