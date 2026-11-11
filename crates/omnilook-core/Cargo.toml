@@ -1,0 +1,13 @@
+[package]
+name = "omnilook-core"
+description = "Omni Look's previewers: file type detection and the preview of each type, platform independent."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true

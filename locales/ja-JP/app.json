@@ -1,0 +1,28 @@
+{
+  "common": {
+    "close": "閉じる",
+    "minimize": "最小化"
+  },
+  "view": {
+    "openDefault": "既定のアプリで開く",
+    "openDefaultHint": "既定のアプリで開く（Ctrl+Enter）"
+  },
+  "settings": {
+    "title": "Omni Look の設定",
+    "general": "全般",
+    "hotkey": "プレビューのショートカット",
+    "hotkeyHint": "エクスプローラーやデスクトップでファイルを選んで押します。もう一度押すか Esc で閉じます",
+    "hotkeySpace": "スペース",
+    "autostart": "Windows の起動時に開始",
+    "autostartHint": "サインイン後にバックグラウンドで待機します（メモリは約 1 MB）",
+    "appearance": "外観",
+    "language": "表示言語",
+    "languageAuto": "システムに合わせる",
+    "mode": "モード",
+    "modeSystem": "システム",
+    "modeLight": "ライト",
+    "modeDark": "ダーク",
+    "lightTheme": "ライトテーマ",
+    "darkTheme": "ダークテーマ"
+  }
+}

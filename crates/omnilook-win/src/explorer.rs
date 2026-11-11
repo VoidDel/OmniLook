@@ -20,7 +20,8 @@ use windows::{
             Shell::{
                 _SVGIO, CSIDL_DESKTOP, IFolderView2, IShellBrowser, IShellItem, IShellItemArray,
                 IShellWindows, IWebBrowser2, SID_STopLevelBrowser, SIGDN_FILESYSPATH,
-                SVGIO_ALLVIEW, SVGIO_FLAG_VIEWORDER, SVGIO_SELECTION, SWC_DESKTOP,
+                SVGIO_ALLVIEW, SVGIO_FLAG_VIEWORDER, SVGIO_SELECTION, SVSI_DESELECTOTHERS,
+                SVSI_ENSUREVISIBLE, SVSI_FOCUSED, SVSI_SELECT, SWC_DESKTOP,
                 SWFO_NEEDDISPATCH, ShellWindows,
             },
             WindowsAndMessaging::{
@@ -273,6 +274,17 @@ impl View {
 
     pub fn browser(&self) -> &IShellBrowser {
         &self.browser
+    }
+
+    /// Selects `path` alone (focused, scrolled into view), as a click would. Returns whether it
+    /// is in this view.
+    pub fn select(&self, path: &std::path::Path) -> Result<bool> {
+        let Some(i) = self.items()?.iter().position(|p| p == path) else {
+            return Ok(false);
+        };
+        let flags = SVSI_SELECT.0 | SVSI_DESELECTOTHERS.0 | SVSI_FOCUSED.0 | SVSI_ENSUREVISIBLE.0;
+        unsafe { self.folder_view.SelectItem(i as i32, flags as u32)? };
+        Ok(true)
     }
 }
 

@@ -1,0 +1,59 @@
+/* Omni Look's own styles; tokens, base and components come from omni-ui. */
+
+html, body, #root { height: 100%; margin: 0; }
+body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden; }
+
+/* ------------------------------------------------------------ window frame (both windows) */
+.look, .settings { height: 100%; display: flex; flex-direction: column; }
+.look-bar {
+  height: var(--titlebar-h); display: flex; align-items: center; gap: 8px; flex: none;
+  padding-left: 12px; border-bottom: 1px solid var(--border-subtle); user-select: none;
+}
+.look-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 100%; }
+.look-name b { font-weight: 600; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.look-name .ic { width: 18px; height: 18px; flex: none; }
+.look-actions { display: flex; align-items: center; gap: 4px; height: 100%; }
+.look-actions .btn .ic { width: 15px; height: 15px; }
+
+/* ------------------------------------------------------------ preview */
+.look-body { flex: 1; min-height: 0; display: flex; position: relative; overflow: hidden; }
+.look-body > * { flex: 1; min-width: 0; }
+.look-status {
+  height: 28px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px;
+  font-size: .8rem; color: var(--fg-secondary); border-top: 1px solid var(--border-subtle);
+  white-space: nowrap; overflow: hidden;
+}
+.look-status .grow { flex: 1; min-width: 0; text-align: right; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; }
+
+.look-text {
+  margin: 0; padding: 12px 16px; overflow: auto; font: 13px/1.55 var(--font-mono, Consolas, monospace);
+  white-space: pre; tab-size: 4; user-select: text;
+}
+.look-image { display: flex; align-items: center; justify-content: center; overflow: auto; background: var(--bg-subtle, transparent); }
+.look-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.look-frame { border: 0; width: 100%; height: 100%; }
+.look-media { display: flex; align-items: center; justify-content: center; background: #000; }
+.look-media video { max-width: 100%; max-height: 100%; }
+.look-media audio { width: min(560px, 90%); }
+
+.look-fallback {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--fg-secondary);
+}
+.look-fallback .fi { width: 72px; height: 72px; }
+.look-fallback b { color: var(--fg-primary); font-size: 1.05rem; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------------ settings */
+.settings .winctl { align-self: stretch; }
+.settings-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 24px; }
+.set-group { margin-bottom: 20px; }
+.set-group h2 { font-size: .8rem; font-weight: 600; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: .04em; margin: 8px 0; }
+.set-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 8px); margin-bottom: 6px;
+}
+.set-row .lbl { font-size: .9rem; }
+.set-row .hint { font-size: .8rem; color: var(--fg-secondary); margin-top: 2px; }
+.settings-foot { color: var(--fg-tertiary, var(--fg-secondary)); font-size: .8rem; text-align: center; }

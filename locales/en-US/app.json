@@ -1,0 +1,28 @@
+{
+  "common": {
+    "close": "Close",
+    "minimize": "Minimize"
+  },
+  "view": {
+    "openDefault": "Open with default app",
+    "openDefaultHint": "Open with the default app (Ctrl+Enter)"
+  },
+  "settings": {
+    "title": "Omni Look Settings",
+    "general": "General",
+    "hotkey": "Preview shortcut",
+    "hotkeyHint": "Press it on a file selected in Explorer or on the desktop; press it again or Esc to close",
+    "hotkeySpace": "Space",
+    "autostart": "Start with Windows",
+    "autostartHint": "Waits in the background after you sign in, using about 1 MB of memory",
+    "appearance": "Appearance",
+    "language": "Language",
+    "languageAuto": "System default",
+    "mode": "Mode",
+    "modeSystem": "System",
+    "modeLight": "Light",
+    "modeDark": "Dark",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme"
+  }
+}

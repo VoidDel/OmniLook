@@ -1,0 +1,28 @@
+{
+  "common": {
+    "close": "关闭",
+    "minimize": "最小化"
+  },
+  "view": {
+    "openDefault": "用默认程序打开",
+    "openDefaultHint": "用默认程序打开（Ctrl+Enter）"
+  },
+  "settings": {
+    "title": "Omni Look 设置",
+    "general": "常规",
+    "hotkey": "预览快捷键",
+    "hotkeyHint": "在资源管理器或桌面选中文件后按下；再按一次或按 Esc 关闭",
+    "hotkeySpace": "空格",
+    "autostart": "开机时启动",
+    "autostartHint": "登录 Windows 后在后台待命，只占约 1 MB 内存",
+    "appearance": "外观",
+    "language": "界面语言",
+    "languageAuto": "跟随系统",
+    "mode": "模式",
+    "modeSystem": "跟随系统",
+    "modeLight": "浅色",
+    "modeDark": "深色",
+    "lightTheme": "浅色主题",
+    "darkTheme": "深色主题"
+  }
+}

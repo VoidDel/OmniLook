@@ -1,0 +1,28 @@
+{
+  "common": {
+    "close": "關閉",
+    "minimize": "最小化"
+  },
+  "view": {
+    "openDefault": "以預設程式開啟",
+    "openDefaultHint": "以預設程式開啟（Ctrl+Enter）"
+  },
+  "settings": {
+    "title": "Omni Look 設定",
+    "general": "一般",
+    "hotkey": "預覽快速鍵",
+    "hotkeyHint": "在檔案總管或桌面選取檔案後按下；再按一次或按 Esc 關閉",
+    "hotkeySpace": "空白鍵",
+    "autostart": "開機時啟動",
+    "autostartHint": "登入 Windows 後在背景待命，只佔約 1 MB 記憶體",
+    "appearance": "外觀",
+    "language": "介面語言",
+    "languageAuto": "跟隨系統",
+    "mode": "模式",
+    "modeSystem": "跟隨系統",
+    "modeLight": "淺色",
+    "modeDark": "深色",
+    "lightTheme": "淺色主題",
+    "darkTheme": "深色主題"
+  }
+}

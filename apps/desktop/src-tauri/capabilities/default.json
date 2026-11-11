@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The preview window (view) and the settings window: their own title bar (move, resize, minimise, close) and following the theme. Files are reached through Omni Look commands and the look:// protocol only.",
+  "windows": ["view", "settings"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-theme",
+    "core:window:allow-set-theme"
+  ]
+}

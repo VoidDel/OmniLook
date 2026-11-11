@@ -1,0 +1,17 @@
+{
+  "name": "omnilook-workspace",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter omnilook-desktop tauri dev",
+    "build": "pnpm --filter omnilook-desktop tauri build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "check:locales": "node scripts/check-locales.mjs",
+    "icons": "pnpm --filter omnilook-desktop tauri icon ../../icons/app-icon.svg -o src-tauri/icons"
+  }
+}

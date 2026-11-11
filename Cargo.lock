@@ -2340,8 +2340,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "omnilook-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "omnilook-desktop"
+version = "0.1.0"
+dependencies = [
+ "omnilook-core",
+ "omnilook-win",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "windows",
+ "windows-core",
+]
+
+[[package]]
 name = "omnilook-m0"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "omnilook-win",
  "serde",
@@ -2356,7 +2377,7 @@ dependencies = [
 
 [[package]]
 name = "omnilook-win"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "windows",
  "windows-core",

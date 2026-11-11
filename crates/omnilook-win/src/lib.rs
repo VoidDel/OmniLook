@@ -4,6 +4,10 @@
 pub mod trigger;
 
 #[cfg(windows)]
+pub mod events;
+#[cfg(windows)]
 pub mod explorer;
 #[cfg(windows)]
 pub mod hook;
+#[cfg(windows)]
+pub mod pipe;
