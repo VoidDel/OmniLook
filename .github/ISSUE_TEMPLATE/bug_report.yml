@@ -1,0 +1,57 @@
+name: 问题反馈
+description: 预览不出来、显示不对、快捷键不灵、安装或更新出错等
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: 谢谢反馈！其他文件管理器的接入方法见 [集成说明](https://github.com/VoidDel/OmniLook/blob/main/docs/integration.md)。
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: "“设置 › 关于”里显示的版本号"
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux（deb）
+        - Linux（rpm）
+        - Linux（AppImage）
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: 怎么打开的预览
+      options:
+        - 资源管理器里按快捷键
+        - 桌面上按快捷键
+        - 从 OmniZip 预览压缩包里的文件
+        - 命令行或其他文件管理器（Directory Opus、Total Commander 等）
+        - Linux 文件管理器的右键菜单
+        - 不涉及预览（设置、托盘、安装、更新）
+    validations:
+      required: true
+  - type: input
+    id: type
+    attributes:
+      label: 文件类型
+      description: 出问题的文件扩展名，例如 .docx、.heic、.md；方便的话附上能重现问题的样本
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 做了什么、期望什么、实际看到了什么。能稳定重现的话，请写出步骤；截图很有帮助。
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志
+      description: "Windows：%LOCALAPPDATA%\\OmniLook\\agent.log（把文件拖到这里）。日志里有文件路径，介意的话先抹掉。"

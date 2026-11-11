@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 其他文件管理器的接入方法
+    url: https://github.com/VoidDel/OmniLook/blob/main/docs/integration.md
+    about: Directory Opus、Total Commander、XYplorer，以及 Linux 的 Dolphin、Nautilus、Nemo、Thunar
+  - name: 安全问题（私密报告）
+    url: https://github.com/VoidDel/OmniLook/security/advisories/new
+    about: 安全漏洞请不要公开提交

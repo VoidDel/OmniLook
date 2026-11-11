@@ -366,6 +366,8 @@ OmniLook/
 - Linux 命令行模式；macOS Quick Look 扩展（与 OmniZip 共建）。
 - 代码签名、自动更新、winget 发布。
 
+> 进度（2026-11-11，v0.1.0）：已完成 docx / xlsx / pptx 简易预览、自带字体预览、HEIC（WIC）/ AVIF、[集成说明](integration.md)、Linux 命令行模式、自动更新与问题反馈、GitHub 发布流程。macOS Quick Look 扩展推迟到有 Mac 可实测时与 OmniZip 一起做；代码签名与 winget 发布暂不做。
+
 ---
 
 ## 11. 测试

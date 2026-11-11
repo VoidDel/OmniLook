@@ -1,0 +1,91 @@
+# Pull requests and main (docs/development-plan.md §11).
+# lint (Linux: translations, tsc, ESLint, rustfmt, clippy) ──► test (Windows, Linux)
+#
+# Kept cheap like OmniZip's and Omni Download's: documentation-only changes do not run it, a
+# newer push cancels the run in progress, every job has a time limit, and only main saves caches.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**/*.md", LICENSE]
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md", LICENSE]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  # No debug info in test builds: faster to compile, and much smaller caches.
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Tauri system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Translations (same keys and placeholders in every language)
+        run: pnpm check:locales
+      - name: TypeScript and ESLint
+        run: pnpm lint
+      - name: rustfmt
+        run: cargo fmt --all --check
+      # The desktop crate embeds the built frontend, so build it before clippy.
+      - run: pnpm --filter omnilook-desktop build
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  test:
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Tauri system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter omnilook-desktop build
+      - name: Rust tests
+        run: cargo test
+      - name: Frontend tests
+        run: pnpm test
