@@ -15,6 +15,8 @@ use std::{
 
 /// How long after a preview opens a foreground change is taken as part of opening it.
 const SETTLE: Duration = Duration::from_millis(1000);
+/// How long a window must stay in front before the preview closes for it.
+const RECHECK: Duration = Duration::from_millis(300);
 
 use omnilook_core::detect;
 use omnilook_win::{
@@ -51,6 +53,8 @@ enum Event {
     ViewExited(u32),
     /// Another window came to the front (its handle, as an integer to cross threads).
     Foreground(isize),
+    /// A while after a window came to the front that would close the preview.
+    ForegroundAgain,
     /// Time to see whether a daily update check is due.
     UpdateTick,
     /// The caller answered which file is next to `from` (§6.3).
@@ -177,6 +181,7 @@ impl Agent {
                 }
             }
             Event::Foreground(h) => self.foreground(HWND(h as *mut _)),
+            Event::ForegroundAgain => self.foreground_again(),
         }
         true
     }
@@ -192,11 +197,33 @@ impl Agent {
         }
         let w = foreground::describe(hwnd);
         if self.opened.is_some_and(|t| t.elapsed() < SETTLE) {
-            if w.pid != v.pid && w.handle != 0 {
+            if w.pid != v.pid && w.handle != 0 && w.shown {
                 self.home = foreground::home_of(hwnd);
             }
             return;
         }
+        // A window can be in front for a moment only (a preview handler's server starting), and
+        // a new one comes to the front before it is shown: look again before closing.
+        let seen = foreground::Window { shown: true, ..w };
+        if !foreground::stays(&seen, self.home, v.pid) {
+            let wake = self.wake.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(RECHECK);
+                wake.send(Event::ForegroundAgain);
+            });
+        }
+    }
+
+    /// The window in front a moment after one that would close the preview: closes it if that
+    /// is still somewhere else.
+    fn foreground_again(&mut self) {
+        let Some(v) = &self.view else {
+            return;
+        };
+        if !self.close_on_blur {
+            return;
+        }
+        let w = foreground::current();
         if !foreground::stays(&w, self.home, v.pid) {
             self.log.line(format!(
                 "foreground {} ({}): closing the preview",

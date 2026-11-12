@@ -12,6 +12,10 @@ pub struct Window {
     /// Its top-level owner: a dialog counts as the window that opened it.
     pub root: isize,
     pub root_class: String,
+    /// On screen (visible, with a size). Windows that come to the front unseen are not somewhere
+    /// the user went: the Excel previewer's server brings its hidden main window forward as it
+    /// starts.
+    pub shown: bool,
 }
 
 /// Where a preview came from.
@@ -28,7 +32,7 @@ pub fn is_desktop_class(class: &str) -> bool {
 
 /// Whether the preview of process `view_pid`, opened from `home`, stays open once `w` is in front.
 pub fn stays(w: &Window, home: Option<Home>, view_pid: u32) -> bool {
-    if w.handle == 0 || w.pid == view_pid {
+    if w.handle == 0 || w.pid == view_pid || !w.shown {
         return true;
     }
     match home {
@@ -51,7 +55,8 @@ mod win {
             Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent},
             WindowsAndMessaging::{
                 EVENT_SYSTEM_FOREGROUND, GA_ROOTOWNER, GetAncestor, GetForegroundWindow,
-                GetWindowThreadProcessId, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
+                GetWindowRect, GetWindowThreadProcessId, IsWindowVisible, WINEVENT_OUTOFCONTEXT,
+                WINEVENT_SKIPOWNPROCESS,
             },
         },
     };
@@ -66,18 +71,28 @@ mod win {
                 pid: 0,
                 root: 0,
                 root_class: String::new(),
+                shown: false,
             };
         }
         let mut pid = 0;
         unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
         let root = unsafe { GetAncestor(hwnd, GA_ROOTOWNER) };
         let root = if root.is_invalid() { hwnd } else { root };
+        let mut r = Default::default();
+        let sized =
+            unsafe { GetWindowRect(hwnd, &mut r) }.is_ok() && r.right > r.left && r.bottom > r.top;
         Window {
             handle: hwnd.0 as isize,
             pid,
             root: root.0 as isize,
             root_class: class_name(root),
+            shown: sized && unsafe { IsWindowVisible(hwnd) }.as_bool(),
         }
+    }
+
+    /// The window in front now.
+    pub fn current() -> Window {
+        describe(unsafe { GetForegroundWindow() })
     }
 
     /// The window in front now, as a home (a command-line preview: the caller's window).
@@ -159,6 +174,7 @@ mod tests {
             pid,
             root,
             root_class: class.into(),
+            shown: true,
         }
     }
 
@@ -188,5 +204,12 @@ mod tests {
         assert!(!stays(&w(100, 9, 100, "CabinetWClass"), desktop, 42));
         // Nowhere known to come from: only the preview keeps it.
         assert!(!stays(&w(100, 9, 100, "CabinetWClass"), None, 42));
+        // A window that comes to the front unseen (Excel's, as its previewer starts).
+        let hidden = Window {
+            shown: false,
+            ..w(500, 33, 500, "XLMAIN")
+        };
+        assert!(stays(&hidden, explorer, 42));
+        assert!(!stays(&w(500, 33, 500, "XLMAIN"), explorer, 42));
     }
 }

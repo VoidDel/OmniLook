@@ -24,9 +24,7 @@ use std::{
 };
 
 use crate::{cli::ViewArgs, paths, settings::Settings, system, update};
-use omnilook_core::{
-    Kind, archive, audio, cad, detect, folder, font, hex, markdown, office, text,
-};
+use omnilook_core::{Kind, archive, audio, cad, detect, folder, font, hex, markdown, office, text};
 use serde::Serialize;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
