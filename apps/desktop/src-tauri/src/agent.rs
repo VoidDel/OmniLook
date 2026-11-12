@@ -92,6 +92,9 @@ struct ViewProc {
     has: PathBuf,
     want: PathBuf,
     title: Option<String>,
+    /// When it started (`foreground::now`): processes started since are its doing, such as a
+    /// preview handler's server.
+    born: u64,
 }
 
 /// The Explorer view a preview follows (opened with the hotkey).
@@ -198,21 +201,36 @@ impl Agent {
         }
         let w = foreground::describe(hwnd);
         if self.opened.is_some_and(|t| t.elapsed() < SETTLE) {
-            if w.pid != v.pid && w.handle != 0 && w.shown {
+            let fresh = foreground::started(w.pid).is_some_and(|t| t >= v.born);
+            if w.pid != v.pid && w.handle != 0 && w.shown && !fresh {
                 self.home = foreground::home_of(hwnd);
             }
             return;
         }
-        // A window can be in front for a moment only (a preview handler's server starting), and
-        // a new one comes to the front before it is shown: look again before closing.
-        let seen = foreground::Window { shown: true, ..w };
-        if !foreground::stays(&seen, self.home, v.pid) {
-            let wake = self.wake.clone();
-            std::thread::spawn(move || {
-                std::thread::sleep(RECHECK);
-                wake.send(Event::ForegroundAgain);
-            });
+        let seen = foreground::Window {
+            shown: true,
+            ..w.clone()
+        };
+        if foreground::stays(&seen, self.home, v.pid) {
+            return;
         }
+        // An app the user went to: close now. A window not shown yet (a new one comes to the
+        // front before it is shown) or of a process started since the preview (the Excel
+        // previewer's server brings its main window forward for a moment): look again shortly.
+        let fresh = foreground::started(w.pid).is_some_and(|t| t >= v.born);
+        if w.shown && !fresh {
+            self.log.line(format!(
+                "foreground {} ({}): closing the preview",
+                w.root_class, w.pid
+            ));
+            self.close_view();
+            return;
+        }
+        let wake = self.wake.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(RECHECK);
+            wake.send(Event::ForegroundAgain);
+        });
     }
 
     /// The window in front a moment after one that would close the preview: closes it if that
@@ -327,6 +345,7 @@ impl Agent {
                     has: path.clone(),
                     want: path,
                     title,
+                    born: foreground::now(),
                 });
                 hook::set_preview_open(true);
             }
@@ -596,16 +615,17 @@ pub fn run() -> ExitCode {
     let mut msg = MSG::default();
     unsafe {
         while GetMessageW(&mut msg, None, 0, 0).as_bool() {
-            if msg.hwnd.is_invalid() && msg.message == WM_APP {
-                while let Ok(e) = rx.try_recv() {
-                    if !agent.handle(e) {
-                        PostQuitMessage(0);
-                    }
-                }
-                continue;
+            if !(msg.hwnd.is_invalid() && msg.message == WM_APP) {
+                let _ = TranslateMessage(&msg);
+                DispatchMessageW(&msg);
             }
-            let _ = TranslateMessage(&msg);
-            DispatchMessageW(&msg);
+            // After any message, not only the wake-up: a wake-up posted while a modal loop ran
+            // on this thread (a COM call into Explorer) is lost.
+            while let Ok(e) = rx.try_recv() {
+                if !agent.handle(e) {
+                    PostQuitMessage(0);
+                }
+            }
         }
     }
     // Stopped from the tray menu (or --quit): the preview goes too.

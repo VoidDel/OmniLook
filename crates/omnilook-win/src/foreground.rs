@@ -50,7 +50,8 @@ mod win {
     use std::cell::RefCell;
 
     use windows::Win32::{
-        Foundation::HWND,
+        Foundation::{CloseHandle, FILETIME, HWND},
+        System::Threading::{GetProcessTimes, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION},
         UI::{
             Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent},
             WindowsAndMessaging::{
@@ -63,6 +64,31 @@ mod win {
 
     use super::{Home, Window, is_desktop_class};
     use crate::explorer::class_name;
+
+    /// Now, in 100 ns units since 1601 (as Windows dates processes).
+    pub fn now() -> u64 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| (d.as_nanos() / 100) as u64 + 116_444_736_000_000_000)
+            .unwrap_or(0)
+    }
+
+    /// When process `pid` started (as `now`), if it can be told.
+    pub fn started(pid: u32) -> Option<u64> {
+        // SAFETY: plain Win32 calls; the handle is closed before returning.
+        unsafe {
+            let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+            let (mut created, mut exited, mut kernel, mut user) = (
+                FILETIME::default(),
+                FILETIME::default(),
+                FILETIME::default(),
+                FILETIME::default(),
+            );
+            let ok = GetProcessTimes(h, &mut created, &mut exited, &mut kernel, &mut user).is_ok();
+            let _ = CloseHandle(h);
+            ok.then(|| (u64::from(created.dwHighDateTime) << 32) | u64::from(created.dwLowDateTime))
+        }
+    }
 
     pub fn describe(hwnd: HWND) -> Window {
         if hwnd.is_invalid() {
