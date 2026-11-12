@@ -37,6 +37,18 @@
     "length": "字节数与记录长度不符",
     "syntax": "不是有效的记录"
   },
+  "cad": {
+    "objects": "{count, plural, other {# 个对象}}",
+    "layers": "{count, plural, other {# 个图层}}",
+    "paper": "图纸空间",
+    "truncated": "图形太大，只画了一部分",
+    "failed": "无法读取这张图纸",
+    "empty": "图纸里没有可显示的内容",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "fit": "适合窗口（双击）",
+    "black": "黑色背景"
+  },
   "settings": {
     "title": "Omni Look 设置",
     "general": "常规",

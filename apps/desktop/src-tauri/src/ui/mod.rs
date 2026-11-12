@@ -24,7 +24,9 @@ use std::{
 };
 
 use crate::{cli::ViewArgs, paths, settings::Settings, system, update};
-use omnilook_core::{Kind, archive, audio, detect, folder, font, hex, markdown, office, text};
+use omnilook_core::{
+    Kind, archive, audio, cad, detect, folder, font, hex, markdown, office, text,
+};
 use serde::Serialize;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
@@ -272,6 +274,27 @@ async fn read_office(
     blocking(move || office::read(&path)).await
 }
 
+/// A CAD drawing as lines, areas and labels (`cad::Drawing::encode`), sent as bytes: a large
+/// plan is millions of points. Read on a thread of its own with a large stack: drawings nest.
+#[tauri::command]
+async fn read_cad(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<tauri::ipc::Response, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || {
+        std::thread::Builder::new()
+            .name("cad".into())
+            .stack_size(256 << 20)
+            .spawn(move || cad::read(&path).map(|d| d.encode()))
+            .map_err(|e| e.to_string())?
+            .join()
+            .map_err(|_| "the drawing could not be read".to_owned())?
+            .map(tauri::ipc::Response::new)
+    })
+    .await
+}
+
 /// A link clicked in a preview: web and mail addresses only.
 #[tauri::command]
 fn open_url(url: String) -> bool {
@@ -378,6 +401,7 @@ fn run(role: Role) -> ExitCode {
             read_audio,
             read_office,
             read_font,
+            read_cad,
             platform::host_show,
             platform::host_area,
             platform::host_unload,

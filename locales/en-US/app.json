@@ -37,6 +37,18 @@
     "length": "The byte count does not match the record length",
     "syntax": "Not a valid record"
   },
+  "cad": {
+    "objects": "{count, plural, one {# object} other {# objects}}",
+    "layers": "{count, plural, one {# layer} other {# layers}}",
+    "paper": "Paper space",
+    "truncated": "Too large: only part of it is drawn",
+    "failed": "This drawing could not be read",
+    "empty": "Nothing in this drawing can be shown",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit to window (double-click)",
+    "black": "Black background"
+  },
   "settings": {
     "title": "Omni Look Settings",
     "general": "General",

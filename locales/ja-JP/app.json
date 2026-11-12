@@ -37,6 +37,18 @@
     "length": "バイト数がレコード長と一致しません",
     "syntax": "有効なレコードではありません"
   },
+  "cad": {
+    "objects": "{count, plural, other {# 個のオブジェクト}}",
+    "layers": "{count, plural, other {# 枚の画層}}",
+    "paper": "ペーパー空間",
+    "truncated": "図面が大きすぎるため、一部のみ表示しています",
+    "failed": "この図面を読み込めません",
+    "empty": "この図面には表示できる内容がありません",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "fit": "ウィンドウに合わせる（ダブルクリック）",
+    "black": "黒背景"
+  },
   "settings": {
     "title": "Omni Look の設定",
     "general": "全般",

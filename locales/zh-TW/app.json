@@ -37,6 +37,18 @@
     "length": "位元組數與記錄長度不符",
     "syntax": "不是有效的記錄"
   },
+  "cad": {
+    "objects": "{count, plural, other {# 個物件}}",
+    "layers": "{count, plural, other {# 個圖層}}",
+    "paper": "圖紙空間",
+    "truncated": "圖形太大，只畫了一部分",
+    "failed": "無法讀取這張圖紙",
+    "empty": "圖紙裡沒有可顯示的內容",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "fit": "符合視窗（按兩下）",
+    "black": "黑色背景"
+  },
   "settings": {
     "title": "Omni Look 設定",
     "general": "一般",

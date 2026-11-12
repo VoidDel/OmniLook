@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { api, type HexPreview, type Shown } from '../lib/api';
 import { formatSize } from '../lib/format';
 import { ArchiveView } from './ArchiveView';
+import { CadView } from './CadView';
 import { FolderView } from './FolderView';
 import { FontView } from './FontView';
 import { HandlerView } from './HandlerView';
@@ -90,6 +91,8 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
       return <FolderView shown={shown} onMeta={onMeta} />;
     case 'font':
       return <FontView shown={shown} onMeta={onMeta} />;
+    case 'cad':
+      return <CadView shown={shown} onMeta={onMeta} />;
     case 'office':
       return <OfficeView shown={shown} onMeta={onMeta} />;
     case 'handler':

@@ -25,13 +25,16 @@ pub enum Kind {
     Office,
     /// TrueType, OpenType, WOFF: samples drawn with the font (`font`).
     Font,
+    /// DWG, DXF: the drawing (`cad`).
+    Cad,
     Binary,
 }
 
 impl Kind {
-    /// Previews that decode video: they need the GPU (H.265 has no software decoder).
+    /// Previews that need the GPU: video (H.265 has no software decoder) and CAD drawings
+    /// (millions of lines, drawn with WebGL).
     pub fn wants_gpu(self) -> bool {
-        self == Kind::Video
+        matches!(self, Kind::Video | Kind::Cad)
     }
 }
 
@@ -243,6 +246,8 @@ pub fn detect(path: &Path) -> Kind {
         Some(Kind::Archive)
     } else if matches!(e, "ttf" | "otf" | "woff" | "woff2") {
         Some(Kind::Font)
+    } else if e == "dwg" || e == "dxf" {
+        Some(Kind::Cad)
     } else if HANDLER.contains(&e) {
         Some(Kind::Handler)
     } else {
@@ -290,6 +295,8 @@ mod tests {
         assert_eq!(detect(&w("a.rs", b"fn main() {}")), Kind::Text);
         assert_eq!(detect(&w("README", b"hello")), Kind::Text);
         assert_eq!(detect(&w("README.md", b"# hi")), Kind::Markdown);
+        assert_eq!(detect(&w("plan.DWG", b"AC1032")), Kind::Cad);
+        assert_eq!(detect(&w("plan.dxf", b"  0\nSECTION\n")), Kind::Cad);
         assert_eq!(detect(&w("zip.md", b"PKrest")), Kind::Archive);
         assert_eq!(detect(&w("x.mp4", b"\0\0\0 ftyp")), Kind::Video);
         assert_eq!(detect(&w("x.docx", b"PK\x03\x04")), Kind::Handler);
@@ -299,7 +306,7 @@ mod tests {
         assert_eq!(detect(&w("x", b"%PDF-1.7\n")), Kind::Pdf);
         assert_eq!(detect(&w("utf16.txt", b"\xFF\xFEa\0b\0")), Kind::Text);
         assert_eq!(detect(&d), Kind::Folder);
-        assert!(Kind::Video.wants_gpu() && !Kind::Pdf.wants_gpu());
+        assert!(Kind::Video.wants_gpu() && Kind::Cad.wants_gpu() && !Kind::Pdf.wants_gpu());
         fs::remove_dir_all(&d).unwrap();
     }
 }

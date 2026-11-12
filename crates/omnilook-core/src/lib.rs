@@ -3,6 +3,7 @@
 
 pub mod archive;
 pub mod audio;
+pub mod cad;
 pub mod folder;
 pub mod font;
 pub mod hex;

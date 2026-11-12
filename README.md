@@ -32,6 +32,7 @@ Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Om
 |---|---|
 | 文本与代码 | 自动识别编码（含 GBK、Shift_JIS），上百种语言的语法高亮，几 MB 的日志也能流畅滚动 |
 | 固件与链接脚本 | Intel HEX（.hex）与 Motorola S-record（.s19、.srec、.mot 等）按字段着色，逐行检查长度与校验和并标出错误行，状态栏显示数据大小、地址范围与入口地址；GNU ld（.ld）与 IAR（.icf）链接脚本语法高亮 |
+| CAD 图纸 | DWG、DXF：模型空间的图形，含块、标注、填充、文字（包括旧图纸的 GBK 编码），颜色随图层；滚轮缩放、拖动平移、双击回到全图，可切换黑色背景。不需要装 AutoCAD |
 | Markdown | 渲染后的排版（表格、任务列表、脚注、代码高亮），可切换到源码；不加载远程资源 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、SVG、AVIF、TIFF；HEIC 需要 Microsoft Store 的"HEIF 图像扩展" |
 | PDF、音频、视频 | 内置播放；音频显示封面与标签；放不了的格式（AVI、WMV 等）显示文件信息 |
@@ -79,4 +80,4 @@ pnpm build            # 安装包，输出在 target/release/bundle/nsis
 
 ## 许可
 
-[MIT](LICENSE)
+[MIT](LICENSE)。读取 DWG 与 DXF 用的 [acadrust](https://github.com/hakanaktt/acadrust) 以 MPL-2.0 授权，未作修改。
