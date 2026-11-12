@@ -13,5 +13,6 @@ pub mod markdown;
 pub mod office;
 pub mod records;
 pub mod text;
+pub mod thumbnail;
 
 pub use kind::{Kind, detect};

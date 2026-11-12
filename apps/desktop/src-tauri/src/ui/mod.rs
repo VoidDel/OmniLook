@@ -24,7 +24,9 @@ use std::{
 };
 
 use crate::{cli::ViewArgs, paths, settings::Settings, system, update};
-use omnilook_core::{Kind, archive, audio, cad, detect, folder, font, hex, markdown, office, text};
+use omnilook_core::{
+    Kind, archive, audio, cad, detect, folder, font, hex, markdown, office, text, thumbnail,
+};
 use serde::Serialize;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
@@ -245,6 +247,9 @@ async fn read_audio(
 fn view_kind(path: &std::path::Path) -> Kind {
     match detect(path) {
         Kind::Binary if platform::handlers(path) => Kind::Handler,
+        // SolidWorks or Inventor installed (eDrawings, Inventor View): their previewer shows the
+        // model itself, more than the picture in the file.
+        Kind::Native if platform::handlers(path) => Kind::Handler,
         // Word, Excel, PowerPoint without Office: their text, read here.
         Kind::Handler if !platform::handlers(path) && office::handles(path) => Kind::Office,
         k => k,
@@ -291,6 +296,16 @@ async fn read_cad(
             .map(tauri::ipc::Response::new)
     })
     .await
+}
+
+/// The picture saved in a SolidWorks or Inventor file, as PNG (`thumbnail::read`).
+#[tauri::command]
+async fn read_native(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<tauri::ipc::Response, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || thumbnail::read(&path).map(tauri::ipc::Response::new)).await
 }
 
 /// A STEP or BREP model's glTF kept from an earlier preview (`cache`), empty when there is none.
@@ -436,6 +451,7 @@ fn run(role: Role) -> ExitCode {
             read_font,
             read_cad,
             solid_cache_get,
+            read_native,
             solid_cache_put,
             platform::host_show,
             platform::host_area,

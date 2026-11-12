@@ -14,6 +14,7 @@ import { FontView } from './FontView';
 import { HandlerView } from './HandlerView';
 import { MarkdownView } from './MarkdownView';
 import { MediaView } from './MediaView';
+import { NativeView } from './NativeView';
 import { OfficeView } from './OfficeView';
 import { TextView } from './TextView';
 
@@ -107,6 +108,8 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
           <ModelView shown={shown} onMeta={onMeta} />
         </Suspense>
       );
+    case 'native':
+      return <NativeView shown={shown} onMeta={onMeta} />;
     case 'office':
       return <OfficeView shown={shown} onMeta={onMeta} />;
     case 'handler':

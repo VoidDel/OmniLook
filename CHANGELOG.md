@@ -7,6 +7,7 @@
   - STL、OBJ（含 .mtl 材质与贴图）、PLY（含点云）、glTF/GLB（含 Draco、Meshopt 压缩）、3MF、FBX、DAE、3DS、AMF。
   - 拖动旋转、右键平移、滚轮朝指针处缩放、双击回到全貌；前视、俯视、右视、轴测；棱线与黑色背景开关；用 GPU 绘制。
   - `.obj` 与 `.stp` 按内容区分：编译器的目标文件、SystemTap 脚本不会当成模型。
+- SolidWorks（.sldprt、.sldasm、.slddrw）与 Inventor（.ipt、.iam、.idw、.ipn）文件：显示文件里保存的预览图，状态栏写明是零件、装配体还是工程图。SolidWorks 2015 起的新格式与之前的 OLE 格式都能读；装了 SolidWorks、Inventor 或 eDrawings 时改用它们的预览程序。别的程序的 .ipt 文本文件不受影响。
 - 第三方组件的许可见 [licenses/](licenses/README.md)；Open CASCADE 的 WebAssembly 文件单独安装在程序旁（`occt/occt-wasm.wasm`），可以替换。
 
 ## v0.2.0（2026-11-12）

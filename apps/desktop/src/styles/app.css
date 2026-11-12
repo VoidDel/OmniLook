@@ -97,6 +97,10 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-model { cursor: default; }
 .look-model:active { cursor: default; }
 .look-cad-tools .btn.text { width: auto; padding: 0 9px; font-size: .8rem; }
+/* SolidWorks / Inventor: the picture in the file, and what it is. */
+.look-native { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: var(--bg-subtle, transparent); }
+.look-native img { max-width: 100%; max-height: calc(100% - 40px); object-fit: contain; border-radius: 6px; background: #fff; }
+.look-native-note { color: var(--fg-muted); font-size: .82rem; text-align: center; }
 .look-model-error { flex-direction: column; gap: 4px; text-align: center; padding: 24px; }
 .look-media { display: flex; align-items: center; justify-content: center; background: #000; }
 .look-media video { max-width: 100%; max-height: 100%; }

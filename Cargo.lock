@@ -2978,9 +2978,11 @@ version = "0.2.0"
 dependencies = [
  "acadrust",
  "ammonia",
+ "cfb",
  "chardetng",
  "earcut",
  "encoding_rs",
+ "flate2",
  "image",
  "lofty",
  "omnizip-formats",

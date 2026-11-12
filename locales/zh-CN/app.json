@@ -70,6 +70,18 @@
       "right": "右"
     }
   },
+  "native": {
+    "solidWorksPart": "SolidWorks 零件",
+    "solidWorksAssembly": "SolidWorks 装配体",
+    "solidWorksDrawing": "SolidWorks 工程图",
+    "inventorPart": "Inventor 零件",
+    "inventorAssembly": "Inventor 部件",
+    "inventorDrawing": "Inventor 工程图",
+    "inventorPresentation": "Inventor 表达视图",
+    "preview": "{w} × {h} 预览图",
+    "note": "文件中保存的预览图；装上 SolidWorks 或 Inventor（或 eDrawings）后可预览三维模型",
+    "none": "文件里没有预览图"
+  },
   "settings": {
     "title": "Omni Look 设置",
     "general": "常规",

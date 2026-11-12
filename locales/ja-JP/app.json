@@ -70,6 +70,18 @@
       "right": "右"
     }
   },
+  "native": {
+    "solidWorksPart": "SolidWorks 部品",
+    "solidWorksAssembly": "SolidWorks アセンブリ",
+    "solidWorksDrawing": "SolidWorks 図面",
+    "inventorPart": "Inventor 部品",
+    "inventorAssembly": "Inventor アセンブリ",
+    "inventorDrawing": "Inventor 図面",
+    "inventorPresentation": "Inventor プレゼンテーション",
+    "preview": "{w} × {h} のプレビュー",
+    "note": "ファイルに保存されたプレビューです。SolidWorks や Inventor（または eDrawings）があれば 3D モデルを表示します",
+    "none": "このファイルにはプレビューがありません"
+  },
   "settings": {
     "title": "Omni Look の設定",
     "general": "全般",

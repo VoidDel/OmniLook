@@ -34,6 +34,7 @@ Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Om
 | 固件与链接脚本 | Intel HEX（.hex）与 Motorola S-record（.s19、.srec、.mot 等）按字段着色，逐行检查长度与校验和并标出错误行，状态栏显示数据大小、地址范围与入口地址；GNU ld（.ld）与 IAR（.icf）链接脚本语法高亮 |
 | CAD 图纸 | DWG、DXF：模型空间的图形，含块、标注、填充、文字（包括旧图纸的 GBK 编码），颜色随图层；滚轮缩放、拖动平移、双击回到全图，可切换黑色背景。不需要装 AutoCAD |
 | 3D 模型 | STEP（.step、.stp）与 BREP 的零件和装配体，带颜色、零件数与毫米尺寸；STL、OBJ（含材质）、PLY、glTF/GLB、3MF、FBX、DAE、3DS、AMF。拖动旋转、右键平移、滚轮缩放，前/顶/右/轴测视图、棱线与黑色背景开关。大的 STEP 装配体第一次要读半分钟左右，之后再预览很快 |
+| SolidWorks、Inventor | .sldprt、.sldasm、.slddrw，.ipt、.iam、.idw、.ipn：显示文件里保存的预览图（新旧两种 SolidWorks 格式都支持）；装了 SolidWorks、Inventor 或 eDrawings 时改用它们的预览程序 |
 | Markdown | 渲染后的排版（表格、任务列表、脚注、代码高亮），可切换到源码；不加载远程资源 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、SVG、AVIF、TIFF；HEIC 需要 Microsoft Store 的"HEIF 图像扩展" |
 | PDF、音频、视频 | 内置播放；音频显示封面与标签；放不了的格式（AVI、WMV 等）显示文件信息 |

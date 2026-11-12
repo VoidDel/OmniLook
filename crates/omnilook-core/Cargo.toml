@@ -12,10 +12,12 @@ publish.workspace = true
 [dependencies]
 acadrust = { version = "0.6.8", default-features = false }
 ammonia = "4.2.4"
+cfb = "0.14"
 chardetng = "1.0.0"
 earcut = "0.4"
 encoding_rs = "0.8.44"
-image = { version = "0.25.10", default-features = false, features = ["png", "tiff"] }
+flate2 = "1.1.11"
+image = { version = "0.25.10", default-features = false, features = ["png", "tiff", "bmp"] }
 lofty = "0.25.5"
 omnizip-formats = { git = "https://github.com/VoidDel/OmniZip", rev = "017ca0d287f54047a84d657f5ba3ee2827ab10f8", version = "0.1.0" }
 pulldown-cmark = { version = "0.13.6", default-features = false, features = ["html"] }

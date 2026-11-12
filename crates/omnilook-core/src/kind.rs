@@ -30,6 +30,8 @@ pub enum Kind {
     /// 3D models: meshes (STL, OBJ, glTF…) and CAD solids (STEP, BREP), read and drawn by the
     /// page (three.js, Open CASCADE in WebAssembly).
     Model,
+    /// SolidWorks and Inventor files: the picture saved in them (`thumbnail`).
+    Native,
     Binary,
 }
 
@@ -298,6 +300,9 @@ pub fn detect(path: &Path) -> Kind {
     if model_by_content(e, &head) {
         return Kind::Model;
     }
+    if crate::thumbnail::handles(path, &head) {
+        return Kind::Native;
+    }
     if let Some(k) = sniff(&head) {
         return k;
     }
@@ -347,6 +352,16 @@ mod tests {
         assert_eq!(detect(&w("trace.stp", b"probe begin { }\n")), Kind::Text);
         assert_eq!(detect(&w("x.brep", b"DBRep_DrawableShape\n")), Kind::Model);
         assert!(Kind::Model.wants_gpu());
+        // SolidWorks and Inventor by their containers; an .ipt of another program is text.
+        assert_eq!(
+            detect(&w("a.SLDPRT", b"\x72\xd0\x25\x0f\0\0\0\x04")),
+            Kind::Native
+        );
+        assert_eq!(
+            detect(&w("b.ipt", b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")),
+            Kind::Native
+        );
+        assert_eq!(detect(&w("input.ipt", b"!InputFile\n")), Kind::Text);
         assert_eq!(detect(&w("zip.md", b"PKrest")), Kind::Archive);
         assert_eq!(detect(&w("x.mp4", b"\0\0\0 ftyp")), Kind::Video);
         assert_eq!(detect(&w("x.docx", b"PK\x03\x04")), Kind::Handler);

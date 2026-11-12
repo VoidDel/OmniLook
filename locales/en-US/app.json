@@ -70,6 +70,18 @@
       "right": "Right"
     }
   },
+  "native": {
+    "solidWorksPart": "SolidWorks part",
+    "solidWorksAssembly": "SolidWorks assembly",
+    "solidWorksDrawing": "SolidWorks drawing",
+    "inventorPart": "Inventor part",
+    "inventorAssembly": "Inventor assembly",
+    "inventorDrawing": "Inventor drawing",
+    "inventorPresentation": "Inventor presentation",
+    "preview": "{w} × {h} preview",
+    "note": "The preview saved in the file; with SolidWorks or Inventor (or eDrawings) installed, the 3D model is shown",
+    "none": "The file has no preview"
+  },
   "settings": {
     "title": "Omni Look Settings",
     "general": "General",
