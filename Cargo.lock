@@ -2974,7 +2974,7 @@ dependencies = [
 
 [[package]]
 name = "omnilook-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "acadrust",
  "ammonia",
@@ -2996,7 +2996,7 @@ dependencies = [
 
 [[package]]
 name = "omnilook-desktop"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "omnilook-core",
  "omnilook-win",
@@ -3011,7 +3011,7 @@ dependencies = [
 
 [[package]]
 name = "omnilook-m0"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "omnilook-win",
  "serde",
@@ -3026,7 +3026,7 @@ dependencies = [
 
 [[package]]
 name = "omnilook-win"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "windows",
  "windows-core",
