@@ -2,7 +2,7 @@
 // from look:// (the file only, by a one-time token); the rest through commands.
 
 import { FileIcon } from 'omni-ui';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, type HexPreview, type Shown } from '../lib/api';
@@ -16,6 +16,9 @@ import { MarkdownView } from './MarkdownView';
 import { MediaView } from './MediaView';
 import { OfficeView } from './OfficeView';
 import { TextView } from './TextView';
+
+// three.js only for the previews that draw with it.
+const ModelView = lazy(() => import('./ModelView'));
 
 /** No preview for this kind (yet): the file's icon, name and size, and "open". */
 function Fallback({ shown, note }: { shown: Shown; note?: string }) {
@@ -68,6 +71,11 @@ function ImageView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => 
   );
 }
 
+function Loading() {
+  const { t } = useTranslation();
+  return <div className="look-note">{t('view.loading')}</div>;
+}
+
 export const HAS_SOURCE: Shown['kind'][] = ['markdown', 'svg'];
 
 export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta: string) => void; source: boolean }) {
@@ -93,6 +101,12 @@ export function Preview({ shown, onMeta, source }: { shown: Shown; onMeta: (meta
       return <FontView shown={shown} onMeta={onMeta} />;
     case 'cad':
       return <CadView shown={shown} onMeta={onMeta} />;
+    case 'model':
+      return (
+        <Suspense fallback={<Loading />}>
+          <ModelView shown={shown} onMeta={onMeta} />
+        </Suspense>
+      );
     case 'office':
       return <OfficeView shown={shown} onMeta={onMeta} />;
     case 'handler':

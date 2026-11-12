@@ -49,6 +49,27 @@
     "fit": "ウィンドウに合わせる（ダブルクリック）",
     "black": "黒背景"
   },
+  "model": {
+    "parts": "{count, plural, other {# 個の部品}}",
+    "triangles": "{count, plural, other {# 個の三角形}}",
+    "failed": "このモデルを読み込めません",
+    "tooLarge": "ファイルが大きすぎるため、プレビューでは読み込みません",
+    "readingSolid": "CAD モデルを読み込み中… {seconds} 秒（大きなアセンブリは 30 秒ほどかかります。2 回目からは速く表示されます）",
+    "edges": "稜線を表示",
+    "edgesTooMany": "三角形が多すぎるため稜線を表示しません",
+    "view": {
+      "iso": "等角図",
+      "front": "正面図",
+      "top": "平面図",
+      "right": "右側面図"
+    },
+    "viewShort": {
+      "iso": "等角",
+      "front": "正面",
+      "top": "平面",
+      "right": "右"
+    }
+  },
   "settings": {
     "title": "Omni Look の設定",
     "general": "全般",

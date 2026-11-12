@@ -50,6 +50,23 @@ pub fn serve(app: &AppHandle, req: Request<Vec<u8>>, responder: UriSchemeRespond
         });
         return;
     }
+    // Open CASCADE's WebAssembly (3D solids): a file installed beside the program, so it can be
+    // replaced (LGPL), and not built into it.
+    if uri == "/w/occt-wasm.wasm" {
+        let path = app
+            .path()
+            .resource_dir()
+            .ok()
+            .map(|d| d.join("occt").join("occt-wasm.wasm"))
+            .filter(|p| p.is_file());
+        std::thread::spawn(move || {
+            responder.respond(match path {
+                Some(p) => respond(&p, &req),
+                None => status(StatusCode::NOT_FOUND),
+            })
+        });
+        return;
+    }
     let path = if let Some(rest) = uri.strip_prefix("/f/") {
         rest.split('/')
             .next()
@@ -109,10 +126,26 @@ const IMAGES: &[&str] = &[
     "png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "ico", "svg", "avif", "tif", "tiff",
 ];
 
+/// Besides images, what a file shown may load from beside it: a Wavefront OBJ model its
+/// materials, a glTF model its buffers.
+fn also_allowed(shown: &Path) -> &'static [&'static str] {
+    let ext = shown
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .unwrap_or_default();
+    match ext.as_str() {
+        "obj" => &["mtl"],
+        "gltf" => &["bin"],
+        _ => &[],
+    }
+}
+
 /// The image file that `dest` (as written in the Markdown file `md`) names: relative to the
 /// file's folder, or a full path, or a `file:` URL; its own `%20`-style escapes undone when that
-/// names a file. Only images: a Markdown file cannot make the window read anything else.
+/// names a file. Only images (and a model's materials or buffers, `also_allowed`): a file shown
+/// cannot make the window read anything else.
 pub fn local_image(md: &Path, dest: &str) -> Option<std::path::PathBuf> {
+    let extra = also_allowed(md);
     let dest = dest.split(['?', '#']).next().unwrap_or_default();
     let dest = dest
         .strip_prefix("file:///")
@@ -131,7 +164,8 @@ pub fn local_image(md: &Path, dest: &str) -> Option<std::path::PathBuf> {
             .extension()
             .map(|e| e.to_string_lossy().to_ascii_lowercase())
             .unwrap_or_default();
-        (IMAGES.contains(&ext.as_str()) && p.is_file()).then_some(p)
+        ((IMAGES.contains(&ext.as_str()) || extra.contains(&ext.as_str())) && p.is_file())
+            .then_some(p)
     })
 }
 
@@ -166,6 +200,7 @@ pub fn mime(path: &Path) -> &'static str {
         "otf" => "font/otf",
         "woff" => "font/woff",
         "woff2" => "font/woff2",
+        "wasm" => "application/wasm",
         _ => "application/octet-stream",
     }
 }
@@ -268,6 +303,20 @@ mod tests {
         assert_eq!(local_image(&md, "./img/a b.png"), Some(want));
         assert_eq!(local_image(&md, "secret.txt"), None);
         assert_eq!(local_image(&md, "missing.png"), None);
+        // A model's materials and buffers, for that model only.
+        std::fs::write(d.join("m.mtl"), b"newmtl a").unwrap();
+        std::fs::write(d.join("m.bin"), b"\0").unwrap();
+        assert_eq!(
+            local_image(&d.join("m.obj"), "m.mtl"),
+            Some(d.join("m.mtl"))
+        );
+        assert_eq!(
+            local_image(&d.join("m.gltf"), "m.bin"),
+            Some(d.join("m.bin"))
+        );
+        assert_eq!(local_image(&md, "m.mtl"), None);
+        assert_eq!(local_image(&d.join("m.obj"), "m.bin"), None);
+        assert_eq!(local_image(&d.join("m.obj"), "secret.txt"), None);
         std::fs::remove_dir_all(&d).unwrap();
     }
 }

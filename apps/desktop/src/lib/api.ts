@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { RecordSummary } from './records';
 
-export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'font' | 'cad' | 'binary';
+export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'font' | 'cad' | 'model' | 'binary';
 
 /** The file a preview shows. */
 export interface Shown {
@@ -175,6 +175,9 @@ export const api = {
   readOffice: (id: number) => invoke<OfficePreview>('read_office', { id }),
   /** A CAD drawing, as bytes (lib/cad.ts `decodeDrawing`). */
   readCad: (id: number) => invoke<ArrayBuffer>('read_cad', { id }),
+  /** A STEP / BREP model's glTF from an earlier preview; empty when there is none. */
+  solidCacheGet: (id: number) => invoke<ArrayBuffer>('solid_cache_get', { id }),
+  solidCachePut: (id: number, glb: ArrayBuffer) => invoke<void>('solid_cache_put', new Uint8Array(glb), { headers: { 'x-id': String(id) } }),
   readAudio: (id: number) => invoke<AudioInfo>('read_audio', { id }),
   /** A system preview handler over the page's area (window pixels); colours as 0x00BBGGRR. */
   hostShow: (id: number, area: HostArea, bg: number | null, fg: number | null) => invoke<string>('host_show', { id, ...area, bg, fg }),

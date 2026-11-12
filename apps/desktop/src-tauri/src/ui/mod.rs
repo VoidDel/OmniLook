@@ -293,6 +293,41 @@ async fn read_cad(
     .await
 }
 
+/// A STEP or BREP model's glTF kept from an earlier preview (`cache`), empty when there is none.
+#[tauri::command]
+async fn solid_cache_get(
+    id: u64,
+    state: tauri::State<'_, ViewState>,
+) -> Result<tauri::ipc::Response, String> {
+    let path = path_of(&state, id)?;
+    blocking(move || {
+        Ok(tauri::ipc::Response::new(
+            crate::cache::get(&path).unwrap_or_default(),
+        ))
+    })
+    .await
+}
+
+/// Keeps a STEP or BREP model's glTF (the request's body; the file's id in `x-id`).
+#[tauri::command]
+async fn solid_cache_put(
+    request: tauri::ipc::Request<'_>,
+    state: tauri::State<'_, ViewState>,
+) -> Result<(), String> {
+    let id: u64 = request
+        .headers()
+        .get("x-id")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse().ok())
+        .ok_or("no id")?;
+    let tauri::ipc::InvokeBody::Raw(glb) = request.body() else {
+        return Err("no data".into());
+    };
+    let glb = glb.clone();
+    let path = path_of(&state, id)?;
+    blocking(move || crate::cache::put(&path, &glb).map_err(|e| e.to_string())).await
+}
+
 /// A link clicked in a preview: web and mail addresses only.
 #[tauri::command]
 fn open_url(url: String) -> bool {
@@ -400,6 +435,8 @@ fn run(role: Role) -> ExitCode {
             read_office,
             read_font,
             read_cad,
+            solid_cache_get,
+            solid_cache_put,
             platform::host_show,
             platform::host_area,
             platform::host_unload,

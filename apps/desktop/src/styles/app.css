@@ -93,6 +93,11 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 }
 .look-cad-tools .btn { width: 30px; height: 30px; padding: 0; justify-content: center; }
 .look-cad-tools .btn.on { color: var(--accent); background: var(--accent-subtle, var(--bg-hover)); }
+/* 3D models: the same canvas and tools, the view buttons as words; turning, not grabbing. */
+.look-model { cursor: default; }
+.look-model:active { cursor: default; }
+.look-cad-tools .btn.text { width: auto; padding: 0 9px; font-size: .8rem; }
+.look-model-error { flex-direction: column; gap: 4px; text-align: center; padding: 24px; }
 .look-media { display: flex; align-items: center; justify-content: center; background: #000; }
 .look-media video { max-width: 100%; max-height: 100%; }
 /* Sound: the cover, the tags, the player. */

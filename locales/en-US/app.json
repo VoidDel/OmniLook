@@ -49,6 +49,27 @@
     "fit": "Fit to window (double-click)",
     "black": "Black background"
   },
+  "model": {
+    "parts": "{count, plural, one {# part} other {# parts}}",
+    "triangles": "{count, plural, one {# triangle} other {# triangles}}",
+    "failed": "This model could not be read",
+    "tooLarge": "Too large to read in a preview",
+    "readingSolid": "Reading the CAD model… {seconds} s (a large assembly can take half a minute; it is quick the next time)",
+    "edges": "Show edges",
+    "edgesTooMany": "Too many triangles to show edges",
+    "view": {
+      "iso": "Isometric view",
+      "front": "Front view",
+      "top": "Top view",
+      "right": "Right view"
+    },
+    "viewShort": {
+      "iso": "Iso",
+      "front": "Front",
+      "top": "Top",
+      "right": "Right"
+    }
+  },
   "settings": {
     "title": "Omni Look Settings",
     "general": "General",

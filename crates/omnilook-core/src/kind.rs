@@ -27,14 +27,42 @@ pub enum Kind {
     Font,
     /// DWG, DXF: the drawing (`cad`).
     Cad,
+    /// 3D models: meshes (STL, OBJ, glTF…) and CAD solids (STEP, BREP), read and drawn by the
+    /// page (three.js, Open CASCADE in WebAssembly).
+    Model,
     Binary,
 }
 
 impl Kind {
-    /// Previews that need the GPU: video (H.265 has no software decoder) and CAD drawings
-    /// (millions of lines, drawn with WebGL).
+    /// Previews that need the GPU: video (H.265 has no software decoder), CAD drawings
+    /// (millions of lines, drawn with WebGL) and 3D models.
     pub fn wants_gpu(self) -> bool {
-        matches!(self, Kind::Video | Kind::Cad)
+        matches!(self, Kind::Video | Kind::Cad | Kind::Model)
+    }
+}
+
+/// 3D model formats known by their extension alone.
+const MODEL: &[&str] = &[
+    "stl", "ply", "gltf", "glb", "3mf", "fbx", "dae", "3ds", "amf", "brep",
+];
+
+/// Extensions shared with other files, a model only when the content says so: `.obj` is also a
+/// compiler's object file, `.stp` a SystemTap script.
+fn model_by_content(ext: &str, head: &[u8]) -> bool {
+    match ext {
+        // Wavefront OBJ: text with vertex, face or object lines.
+        "obj" => {
+            looks_like_text(head)
+                && head.split(|&b| b == b'\n').any(|l| {
+                    let l = l.trim_ascii_start();
+                    ["v ", "vn ", "vt ", "f ", "o ", "g ", "mtllib "]
+                        .iter()
+                        .any(|p| l.starts_with(p.as_bytes()))
+                })
+        }
+        // STEP (ISO 10303-21).
+        "step" | "stp" => head.trim_ascii_start().starts_with(b"ISO-10303-21"),
+        _ => false,
     }
 }
 
@@ -248,6 +276,8 @@ pub fn detect(path: &Path) -> Kind {
         Some(Kind::Font)
     } else if e == "dwg" || e == "dxf" {
         Some(Kind::Cad)
+    } else if MODEL.contains(&e) {
+        Some(Kind::Model)
     } else if HANDLER.contains(&e) {
         Some(Kind::Handler)
     } else {
@@ -265,6 +295,9 @@ pub fn detect(path: &Path) -> Kind {
         .and_then(|mut f| f.read(&mut head))
         .unwrap_or(0);
     head.truncate(n);
+    if model_by_content(e, &head) {
+        return Kind::Model;
+    }
     if let Some(k) = sniff(&head) {
         return k;
     }
@@ -297,6 +330,23 @@ mod tests {
         assert_eq!(detect(&w("README.md", b"# hi")), Kind::Markdown);
         assert_eq!(detect(&w("plan.DWG", b"AC1032")), Kind::Cad);
         assert_eq!(detect(&w("plan.dxf", b"  0\nSECTION\n")), Kind::Cad);
+        // 3D models; .obj and .stp by their content.
+        assert_eq!(detect(&w("part.STL", b"solid x\n")), Kind::Model);
+        assert_eq!(
+            detect(&w("m.obj", b"# Blender\nmtllib m.mtl\nv 0 0 0\n")),
+            Kind::Model
+        );
+        assert_eq!(
+            detect(&w("main.obj", b"\x64\x86\x05\x00rest")),
+            Kind::Binary
+        );
+        assert_eq!(
+            detect(&w("a.step", b"ISO-10303-21;\nHEADER;\n")),
+            Kind::Model
+        );
+        assert_eq!(detect(&w("trace.stp", b"probe begin { }\n")), Kind::Text);
+        assert_eq!(detect(&w("x.brep", b"DBRep_DrawableShape\n")), Kind::Model);
+        assert!(Kind::Model.wants_gpu());
         assert_eq!(detect(&w("zip.md", b"PKrest")), Kind::Archive);
         assert_eq!(detect(&w("x.mp4", b"\0\0\0 ftyp")), Kind::Video);
         assert_eq!(detect(&w("x.docx", b"PK\x03\x04")), Kind::Handler);

@@ -49,6 +49,27 @@
     "fit": "适合窗口（双击）",
     "black": "黑色背景"
   },
+  "model": {
+    "parts": "{count, plural, other {# 个零件}}",
+    "triangles": "{count, plural, other {# 个三角面}}",
+    "failed": "无法读取这个模型",
+    "tooLarge": "文件太大，预览中不读取",
+    "readingSolid": "正在读取 CAD 模型… {seconds} 秒（大的装配体可能要半分钟，再次预览会快很多）",
+    "edges": "显示棱线",
+    "edgesTooMany": "三角面太多，不显示棱线",
+    "view": {
+      "iso": "轴测视图",
+      "front": "前视图",
+      "top": "俯视图",
+      "right": "右视图"
+    },
+    "viewShort": {
+      "iso": "轴测",
+      "front": "前",
+      "top": "顶",
+      "right": "右"
+    }
+  },
   "settings": {
     "title": "Omni Look 设置",
     "general": "常规",

@@ -8,6 +8,7 @@
 //! | `omnilook` | starts the agent if needed and opens the settings window |
 //! | `omnilook --quit` | stops the agent and its preview |
 
+mod cache;
 pub mod cli;
 pub mod paths;
 pub mod protocol;

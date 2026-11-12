@@ -49,6 +49,27 @@
     "fit": "符合視窗（按兩下）",
     "black": "黑色背景"
   },
+  "model": {
+    "parts": "{count, plural, other {# 個零件}}",
+    "triangles": "{count, plural, other {# 個三角面}}",
+    "failed": "無法讀取這個模型",
+    "tooLarge": "檔案太大，預覽中不讀取",
+    "readingSolid": "正在讀取 CAD 模型… {seconds} 秒（大的組合件可能要半分鐘，再次預覽會快很多）",
+    "edges": "顯示稜線",
+    "edgesTooMany": "三角面太多，不顯示稜線",
+    "view": {
+      "iso": "等角視圖",
+      "front": "前視圖",
+      "top": "俯視圖",
+      "right": "右視圖"
+    },
+    "viewShort": {
+      "iso": "等角",
+      "front": "前",
+      "top": "頂",
+      "right": "右"
+    }
+  },
   "settings": {
     "title": "Omni Look 設定",
     "general": "一般",

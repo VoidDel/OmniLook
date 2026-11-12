@@ -16,13 +16,14 @@
     "security": {
       "csp": {
         "default-src": "'self'",
-        "script-src": "'self'",
+        "script-src": "'self' 'wasm-unsafe-eval'",
+        "worker-src": "'self' blob:",
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob: http://look.localhost look:",
         "media-src": "http://look.localhost look:",
         "frame-src": "http://look.localhost look:",
         "font-src": "'self' data: http://look.localhost look:",
-        "connect-src": "ipc: http://ipc.localhost http://look.localhost look:"
+        "connect-src": "'self' ipc: http://ipc.localhost http://look.localhost look: data: blob:"
       },
       "freezePrototype": true
     }
@@ -38,6 +39,11 @@
     "shortDescription": "Press Ctrl+Space in Explorer to preview files",
     "longDescription": "Omni Look previews files from Explorer and the desktop with a key press: text and code with highlighting, images, archives, PDF, audio, video and Office documents.",
     "licenseFile": "../../../LICENSE",
+    "resources": {
+      "../node_modules/occt-wasm/dist/occt-wasm.wasm": "occt/occt-wasm.wasm",
+      "../../../licenses/OCCT-LGPL-2.1.txt": "occt/LICENSE-LGPL-2.1.txt",
+      "../../../licenses/README.md": "occt/README.md"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
