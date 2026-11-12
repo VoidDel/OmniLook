@@ -10,7 +10,7 @@ Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Om
 
 | 系统 | 文件 | 说明 |
 |---|---|---|
-| Windows 10 / 11（x64） | `Omni Look_<版本>_x64-setup.exe` | 为当前用户安装，不需要管理员权限；装好后即在后台待命，并随 Windows 启动 |
+| Windows 10 / 11（x64） | `Omni.Look_<版本>_x64-setup.exe` | 为当前用户安装，不需要管理员权限；装好后即在后台待命，并随 Windows 启动 |
 | Linux（x64） | `.deb`、`.rpm`、`.AppImage` | 命令行模式，见下文 |
 
 安装包还没有代码签名，Windows SmartScreen 可能提示"未知发布者"，点"更多信息 → 仍要运行"即可。之后的版本会在应用内提示更新（"设置 › 关于"）。
