@@ -31,6 +31,7 @@ Rust + Tauri 2 + React，与 [OmniZip](https://github.com/VoidDel/OmniZip)、[Om
 | 类型 | 内容 |
 |---|---|
 | 文本与代码 | 自动识别编码（含 GBK、Shift_JIS），上百种语言的语法高亮，几 MB 的日志也能流畅滚动 |
+| 固件与链接脚本 | Intel HEX（.hex）与 Motorola S-record（.s19、.srec、.mot 等）按字段着色，逐行检查长度与校验和并标出错误行，状态栏显示数据大小、地址范围与入口地址；GNU ld（.ld）与 IAR（.icf）链接脚本语法高亮 |
 | Markdown | 渲染后的排版（表格、任务列表、脚注、代码高亮），可切换到源码；不加载远程资源 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、SVG、AVIF、TIFF；HEIC 需要 Microsoft Store 的"HEIF 图像扩展" |
 | PDF、音频、视频 | 内置播放；音频显示封面与标签；放不了的格式（AVI、WMV 等）显示文件信息 |

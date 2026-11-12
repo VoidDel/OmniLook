@@ -19,7 +19,7 @@ omnizip-formats = { git = "https://github.com/VoidDel/OmniZip", rev = "017ca0d28
 pulldown-cmark = { version = "0.13.6", default-features = false, features = ["html"] }
 roxmltree = "0.21"
 serde.workspace = true
-syntect = { version = "5.3.0", default-features = false, features = ["parsing", "default-syntaxes", "regex-onig"] }
+syntect = { version = "5.3.0", default-features = false, features = ["parsing", "default-syntaxes", "regex-onig", "yaml-load"] }
 ttf-parser = "0.25.1"
 two-face = { version = "0.5.2", default-features = false, features = ["syntect-onig"] }
 zip = { version = "9.5.1", default-features = false, features = ["deflate"] }

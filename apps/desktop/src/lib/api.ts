@@ -2,6 +2,8 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
+import type { RecordSummary } from './records';
+
 export type Kind = 'text' | 'markdown' | 'image' | 'svg' | 'pdf' | 'video' | 'audio' | 'archive' | 'folder' | 'handler' | 'office' | 'font' | 'binary';
 
 /** The file a preview shows. */
@@ -70,6 +72,8 @@ export interface TextPreview {
   truncated: boolean;
   encoding: string;
   language: string | null;
+  /** Firmware records (Intel HEX, S-records) found in the whole file. */
+  records: RecordSummary | null;
 }
 
 /** Where a system preview handler draws, in window pixels. */

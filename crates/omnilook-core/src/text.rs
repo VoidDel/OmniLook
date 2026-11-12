@@ -12,7 +12,11 @@ use std::{
 };
 
 use serde::Serialize;
-use syntect::parsing::{ParseState, Scope, ScopeStack, SyntaxReference, SyntaxSet};
+use syntect::parsing::{
+    ParseState, Scope, ScopeStack, SyntaxDefinition, SyntaxReference, SyntaxSet, SyntaxSetBuilder,
+};
+
+use crate::records;
 
 /// Bytes read for a text preview.
 pub const MAX_BYTES: u64 = 4 << 20;
@@ -30,6 +34,9 @@ pub struct TextPreview {
     pub encoding: String,
     /// The syntax found for the file (its display name), if any but plain text.
     pub language: Option<String>,
+    /// Firmware records (Intel HEX, S-records): what the whole file holds, and its bad records.
+    /// Only from [`preview`].
+    pub records: Option<records::Summary>,
 }
 
 fn decode(bytes: &[u8]) -> (String, &'static str) {
@@ -59,7 +66,51 @@ fn syntaxes() -> &'static SyntaxSet {
     SET.get_or_init(two_face::syntax::extra_newlines)
 }
 
-fn syntax_for<'a>(set: &'a SyntaxSet, path: &Path, text: &str) -> Option<&'a SyntaxReference> {
+/// Syntaxes bat lacks, kept in a set of their own (adding them to bat's would link its few hundred
+/// syntaxes again at every start): GNU ld linker scripts and IAR ILINK configuration files.
+fn own_syntaxes() -> &'static SyntaxSet {
+    static SET: OnceLock<SyntaxSet> = OnceLock::new();
+    SET.get_or_init(|| {
+        let mut b = SyntaxSetBuilder::new();
+        for src in [
+            include_str!("../syntaxes/linker-script.sublime-syntax"),
+            include_str!("../syntaxes/iar-icf.sublime-syntax"),
+        ] {
+            match SyntaxDefinition::load_from_str(src, true, None) {
+                Ok(d) => b.add(d),
+                Err(e) => debug_assert!(false, "{e}"),
+            }
+        }
+        b.build()
+    })
+}
+
+/// The syntax for  and the set it belongs to: ours first, then bat's.
+fn syntax_for(path: &Path, text: &str) -> Option<(&'static SyntaxSet, &'static SyntaxReference)> {
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .unwrap_or_default();
+    let own = own_syntaxes();
+    if let Some(s) = own.find_syntax_by_extension(&ext) {
+        return Some((own, s));
+    }
+    let set = syntaxes();
+    syntax_in(set, path, text).map(|s| (set, s))
+}
+
+/// The syntax for `lang` (a code fence's language) and its set.
+fn syntax_by_token(lang: &str) -> Option<(&'static SyntaxSet, &'static SyntaxReference)> {
+    let lower = lang.to_ascii_lowercase();
+    [own_syntaxes(), syntaxes()].into_iter().find_map(|set| {
+        set.find_syntax_by_token(lang)
+            .or_else(|| set.find_syntax_by_token(&lower))
+            .filter(|s| s.name != "Plain Text")
+            .map(|s| (set, s))
+    })
+}
+
+fn syntax_in<'a>(set: &'a SyntaxSet, path: &Path, text: &str) -> Option<&'a SyntaxReference> {
     let name = path.file_name()?.to_string_lossy().to_string();
     let ext = path
         .extension()
@@ -79,13 +130,26 @@ pub fn read(path: &Path) -> std::io::Result<TextPreview> {
     let mut buf = Vec::with_capacity(len.min(MAX_BYTES) as usize);
     f.by_ref().take(MAX_BYTES).read_to_end(&mut buf)?;
     let (text, encoding) = decode(&buf);
-    let language = syntax_for(syntaxes(), path, &text).map(|s| s.name.clone());
+    let language = match records::detect(path, &text) {
+        Some(f) => Some(f.name().to_owned()),
+        None => syntax_for(path, &text).map(|(_, s)| s.name.clone()),
+    };
     Ok(TextPreview {
         text,
         truncated: len > MAX_BYTES,
         encoding: encoding.to_owned(),
         language,
+        records: None,
     })
+}
+
+/// [`read`], plus the summary of firmware records, which reads the whole file.
+pub fn preview(path: &Path) -> std::io::Result<TextPreview> {
+    let mut t = read(path)?;
+    if let Some(format) = records::detect(path, &t.text) {
+        t.records = records::scan(path, format).ok();
+    }
+    Ok(t)
 }
 
 /// Token classes the page colours (`.tk-<letter>` in its styles).
@@ -158,8 +222,11 @@ pub fn highlight(path: &Path, text: &str) -> Vec<u32> {
     if text.len() > MAX_HIGHLIGHT {
         return Vec::new();
     }
-    let set = syntaxes();
-    let Some(syntax) = syntax_for(set, path, text) else {
+    // Firmware records are coloured by the page, line by line.
+    if records::detect(path, text).is_some() {
+        return Vec::new();
+    }
+    let Some((set, syntax)) = syntax_for(path, text) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -230,15 +297,10 @@ fn escape_html(s: &str, out: &mut String) {
 /// known or the code is too long.
 pub fn highlight_html(lang: &str, code: &str) -> String {
     let mut out = String::with_capacity(code.len() + code.len() / 2);
-    let set = syntaxes();
-    let syntax = (!lang.is_empty() && code.len() <= MAX_HIGHLIGHT)
-        .then(|| {
-            set.find_syntax_by_token(lang)
-                .or_else(|| set.find_syntax_by_token(&lang.to_ascii_lowercase()))
-        })
-        .flatten()
-        .filter(|s| s.name != "Plain Text");
-    let Some(syntax) = syntax else {
+    let found = (!lang.is_empty() && code.len() <= MAX_HIGHLIGHT)
+        .then(|| syntax_by_token(lang))
+        .flatten();
+    let Some((set, syntax)) = found else {
         escape_html(code, &mut out);
         return out;
     };
@@ -319,6 +381,62 @@ mod tests {
         assert!(!ranges("Cargo.toml", "[package]\nname = \"x\"\n").is_empty());
         // No syntax, no ranges.
         assert!(ranges("notes.txt", "plain words").is_empty());
+    }
+
+    #[test]
+    fn linker_scripts() {
+        let ld = "/* Entry */\nENTRY(Reset_Handler)\n_estack = ORIGIN(RAM) + LENGTH(RAM);\n\
+                  MEMORY\n{\n  FLASH (rx) : ORIGIN = 0x8000000, LENGTH = 2048K\n}\n\
+                  SECTIONS\n{\n  .text :\n  {\n    KEEP(*(.isr_vector))\n  } >FLASH\n}\n";
+        let r = ranges("STM32H743XX_FLASH.ld", ld);
+        for (piece, class) in [
+            ("/* Entry */", Class::Comment),
+            ("ENTRY", Class::Keyword),
+            ("ORIGIN", Class::Function),
+            ("SECTIONS", Class::Keyword),
+            ("0x8000000", Class::Number),
+            ("2048K", Class::Number),
+            (".text", Class::Type),
+            (".isr_vector", Class::Type),
+            ("FLASH", Class::Attribute),
+        ] {
+            assert!(r.contains(&(piece.into(), class as u32)), "{piece}: {r:?}");
+        }
+        let icf = "define symbol __ICFEDIT_intvec_start__ = 0x08000000;\n\
+                   place in ROM_region   { readonly };\n// done\n";
+        let r = ranges("stm32g431xx_flash.icf", icf);
+        for (piece, class) in [
+            ("define", Class::Keyword),
+            ("0x08000000", Class::Number),
+            ("readonly", Class::Keyword),
+            ("// done", Class::Comment),
+        ] {
+            assert!(r.contains(&(piece.into(), class as u32)), "{piece}: {r:?}");
+        }
+        assert_eq!(
+            syntax_by_token("ld").map(|(_, s)| s.name.as_str()),
+            Some("Linker Script")
+        );
+    }
+
+    #[test]
+    fn firmware_records_are_left_to_the_page() {
+        let dir = std::env::temp_dir().join(format!("omnilook-records-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("app.hex");
+        std::fs::write(
+            &file,
+            ":0400100010111213A6\n:0400100010111213A7\n:00000001FF\n",
+        )
+        .unwrap();
+        let t = preview(&file).unwrap();
+        assert_eq!(t.language.as_deref(), Some("Intel HEX"));
+        let s = t.records.unwrap();
+        assert_eq!((s.records, s.bad_count, s.data_bytes), (2, 1, 4));
+        assert!(highlight(&file, &t.text).is_empty());
+        // read() leaves the summary out.
+        assert!(read(&file).unwrap().records.is_none());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

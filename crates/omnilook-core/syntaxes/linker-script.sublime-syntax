@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+# GNU ld linker scripts (STM32CubeIDE, ESP-IDF, Zephyr, the Linux kernel…). Scopes are the ones
+# text.rs maps to the page's token classes.
+name: Linker Script
+file_extensions: [ld, lds, ldscript]
+scope: source.ld
+
+contexts:
+  main:
+    - match: /\*
+      scope: punctuation.definition.comment.begin.ld
+      push: block-comment
+    - match: //.*$\n?
+      scope: comment.line.ld
+    - match: '"'
+      push: string
+    - match: \b(SECTIONS|MEMORY|PHDRS|VERSION|OVERLAY)\b
+      scope: keyword.control.ld
+    - match: \b(ENTRY|INCLUDE|INPUT|GROUP|AS_NEEDED|OUTPUT|SEARCH_DIR|STARTUP|OUTPUT_FORMAT|OUTPUT_ARCH|TARGET|ASSERT|EXTERN|FORCE_COMMON_ALLOCATION|INHIBIT_COMMON_ALLOCATION|FORCE_GROUP_ALLOCATION|INSERT|AFTER|BEFORE|NOCROSSREFS|NOCROSSREFS_TO|REGION_ALIAS|LD_FEATURE|PROVIDE|PROVIDE_HIDDEN|HIDDEN|KEEP|SORT|SORT_BY_NAME|SORT_BY_ALIGNMENT|SORT_BY_INIT_PRIORITY|SORT_NONE|REVERSE|EXCLUDE_FILE|FILL|CREATE_OBJECT_SYMBOLS|CONSTRUCTORS|BYTE|SHORT|LONG|QUAD|SQUAD|NOLOAD|DSECT|COPY|INFO|READONLY|ONLY_IF_RO|ONLY_IF_RW|SUBALIGN|AT|ALIGN_WITH_INPUT|global|local|extern)\b
+      scope: keyword.other.ld
+    - match: \b(ABSOLUTE|ADDR|ALIGN|ALIGNOF|BLOCK|DATA_SEGMENT_ALIGN|DATA_SEGMENT_END|DATA_SEGMENT_RELRO_END|DEFINED|LENGTH|len|l|LOADADDR|LOG2CEIL|MAX|MIN|NEXT|ORIGIN|org|o|SEGMENT_START|SIZEOF|SIZEOF_HEADERS|CONSTANT)\b(?=\s*[(=])
+      scope: support.function.ld
+    # Memory region a section goes to: `} >FLASH`, `AT> FLASH`.
+    - match: (>)\s*([A-Za-z_][\w]*)
+      captures:
+        2: entity.other.attribute-name.region.ld
+    # Section names: .text, .isr_vector, .ARM.exidx*, .gnu.linkonce.t.*
+    - match: (?<![\w.$])\.[A-Za-z_$][\w.$]*\*?
+      scope: entity.name.type.section.ld
+    - match: \b(0[xX]\h+|\d+)[KkMm]?\b
+      scope: constant.numeric.ld
+    # C preprocessor lines (.ld.S, Zephyr).
+    - match: ^\s*#\s*\w+
+      scope: meta.preprocessor.ld
+
+  block-comment:
+    - meta_scope: comment.block.ld
+    - match: \*/
+      pop: true
+
+  string:
+    - meta_scope: string.quoted.double.ld
+    - match: '"'
+      pop: true

@@ -191,7 +191,7 @@ async fn read_text(
     state: tauri::State<'_, ViewState>,
 ) -> Result<text::TextPreview, String> {
     let path = path_of(&state, id)?;
-    blocking(move || text::read(&path).map_err(|e| e.to_string())).await
+    blocking(move || text::preview(&path).map_err(|e| e.to_string())).await
 }
 
 /// Token classes for the text (`text::highlight`), asked for after the plain text is shown.

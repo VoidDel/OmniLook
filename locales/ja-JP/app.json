@@ -24,6 +24,19 @@
     "handlerTimeout": "プレビューハンドラーが応答しません",
     "heifNeeded": "HEIC のプレビューには Microsoft Store の「HEIF 画像拡張機能」が必要です"
   },
+  "records": {
+    "data": "データ {size}",
+    "segments": "{count, plural, other {# 区間}}",
+    "entry": "エントリ {address}",
+    "header": "ヘッダー {text}",
+    "ok": "チェックサムはすべて正常",
+    "bad": "{count, plural, other {# 件のエラー}}（{line} 行目から）",
+    "noEnd": "終端レコードがありません",
+    "partial": "ファイルが大きすぎるため先頭 512 MB のみ確認しました",
+    "checksum": "チェックサムが正しくありません（正しくは {expected}）",
+    "length": "バイト数がレコード長と一致しません",
+    "syntax": "有効なレコードではありません"
+  },
   "settings": {
     "title": "Omni Look の設定",
     "general": "全般",

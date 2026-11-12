@@ -24,6 +24,19 @@
     "handlerTimeout": "预览程序没有响应",
     "heifNeeded": "需要从 Microsoft Store 安装\"HEIF 图像扩展\"才能预览 HEIC 图片"
   },
+  "records": {
+    "data": "数据 {size}",
+    "segments": "{count, plural, other {# 段}}",
+    "entry": "入口 {address}",
+    "header": "标头 {text}",
+    "ok": "校验和全部正确",
+    "bad": "{count, plural, other {# 处错误}}，第 {line} 行起",
+    "noEnd": "缺少结束记录",
+    "partial": "文件太大，只检查了前 512 MB",
+    "checksum": "校验和不对，应为 {expected}",
+    "length": "字节数与记录长度不符",
+    "syntax": "不是有效的记录"
+  },
   "settings": {
     "title": "Omni Look 设置",
     "general": "常规",

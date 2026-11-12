@@ -47,6 +47,8 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .tk8 { color: #B3261E; }
 .tk9 { color: #9A6700; }
 .tk10 { color: var(--accent); font-weight: 600; }
+/* A bad firmware record (lib/records.ts). */
+.tk11 { color: #C62828; background: rgba(198, 40, 40, .1); text-decoration: underline wavy; text-underline-offset: 3px; cursor: help; }
 :root[data-appearance="dark"] .tk2 { color: #7FD28F; }
 :root[data-appearance="dark"] :is(.tk3, .tk7) { color: #F0A35E; }
 :root[data-appearance="dark"] .tk4 { color: #D49BFF; }
@@ -54,6 +56,7 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 :root[data-appearance="dark"] .tk6 { color: #5FD4D4; }
 :root[data-appearance="dark"] .tk8 { color: #FF8A80; }
 :root[data-appearance="dark"] .tk9 { color: #E8C266; }
+:root[data-appearance="dark"] .tk11 { color: #FF8A80; background: rgba(255, 138, 128, .14); }
 .look-hex { margin: 0; padding: 12px 16px; overflow: auto; font: 13px/20px var(--look-mono); user-select: text; }
 .look-note { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--fg-secondary); }
 .look-note .ic { width: 18px; height: 18px; }

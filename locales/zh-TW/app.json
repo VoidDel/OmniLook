@@ -24,6 +24,19 @@
     "handlerTimeout": "預覽程式沒有回應",
     "heifNeeded": "需要從 Microsoft Store 安裝「HEIF 影像延伸模組」才能預覽 HEIC 圖片"
   },
+  "records": {
+    "data": "資料 {size}",
+    "segments": "{count, plural, other {# 段}}",
+    "entry": "進入點 {address}",
+    "header": "標頭 {text}",
+    "ok": "校驗和全部正確",
+    "bad": "{count, plural, other {# 處錯誤}}，第 {line} 行起",
+    "noEnd": "缺少結束記錄",
+    "partial": "檔案太大，只檢查了前 512 MB",
+    "checksum": "校驗和不對，應為 {expected}",
+    "length": "位元組數與記錄長度不符",
+    "syntax": "不是有效的記錄"
+  },
   "settings": {
     "title": "Omni Look 設定",
     "general": "一般",

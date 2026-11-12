@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+# IAR ILINK configuration files (.icf), as in the STM32 CMSIS templates. Scopes are the ones
+# text.rs maps to the page's token classes.
+name: IAR Linker Configuration
+file_extensions: [icf]
+scope: source.icf
+
+contexts:
+  main:
+    - match: /\*
+      scope: punctuation.definition.comment.begin.icf
+      push: block-comment
+    - match: //.*$\n?
+      scope: comment.line.icf
+    - match: '"'
+      push: string
+    - match: \b(define|place|initialize|do|not|keep|export|import|include|if|else|repeat|with|in|at|by|from|to|for|use|check|that|error|warning)\b
+      scope: keyword.control.icf
+    - match: \b(symbol|memory|region|block|overlay|section|object|readonly|readwrite|zeroinit|ro|rw|zi|code|data|const|copy|manually|packing|none|zeros|packbits|bwt|lzw|auto|smallest|alignment|size|maximum|minimum|fixed|order|alphabetical|static|expanding|first|last|address|start|end|displacement|exported|preinit_array|init_array|noload|interrupt)\b
+      scope: keyword.other.icf
+    - match: \b(isempty|isdefinedsymbol|start|end|size)\b(?=\s*\()
+      scope: support.function.icf
+    # Section names: .intvec, .noinit, .text*
+    - match: (?<![\w.$])\.[A-Za-z_$][\w.$]*\*?
+      scope: entity.name.type.section.icf
+    - match: \b(0[xX]\h+|\d+)[KMG]?\b
+      scope: constant.numeric.icf
+
+  block-comment:
+    - meta_scope: comment.block.icf
+    - match: \*/
+      pop: true
+
+  string:
+    - meta_scope: string.quoted.double.icf
+    - match: '"'
+      pop: true

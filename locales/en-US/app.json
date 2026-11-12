@@ -24,6 +24,19 @@
     "handlerTimeout": "The preview handler did not respond",
     "heifNeeded": "Previewing HEIC needs \"HEIF Image Extensions\" from the Microsoft Store"
   },
+  "records": {
+    "data": "{size} of data",
+    "segments": "{count, plural, one {# segment} other {# segments}}",
+    "entry": "entry {address}",
+    "header": "header {text}",
+    "ok": "checksums OK",
+    "bad": "{count, plural, one {# error} other {# errors}} from line {line}",
+    "noEnd": "no end-of-file record",
+    "partial": "too large: only the first 512 MB checked",
+    "checksum": "Wrong checksum, should be {expected}",
+    "length": "The byte count does not match the record length",
+    "syntax": "Not a valid record"
+  },
   "settings": {
     "title": "Omni Look Settings",
     "general": "General",

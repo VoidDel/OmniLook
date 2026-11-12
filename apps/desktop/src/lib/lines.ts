@@ -3,8 +3,10 @@
 
 export interface Piece {
   text: string;
-  /** Token class (1–10), 0 for none. */
+  /** Token class (1–11), 0 for none. */
   cls: number;
+  /** Why the piece is marked (a bad record). */
+  title?: string;
 }
 
 export interface Lines {

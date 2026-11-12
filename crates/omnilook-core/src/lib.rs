@@ -10,6 +10,7 @@ pub mod image;
 pub mod kind;
 pub mod markdown;
 pub mod office;
+pub mod records;
 pub mod text;
 
 pub use kind::{Kind, detect};
