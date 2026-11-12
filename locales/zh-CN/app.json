@@ -68,7 +68,15 @@
       "front": "前",
       "top": "顶",
       "right": "右"
-    }
+    },
+    "partList": "{count, plural, other {零件（# 个）}}",
+    "partListToggle": "零件列表",
+    "showAll": "全部显示",
+    "expand": "展开",
+    "collapse": "折叠",
+    "show": "显示",
+    "hide": "隐藏",
+    "unnamed": "未命名 {n}"
   },
   "native": {
     "solidWorksPart": "SolidWorks 零件",

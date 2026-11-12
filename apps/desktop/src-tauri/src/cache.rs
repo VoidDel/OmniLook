@@ -14,6 +14,10 @@ use crate::paths;
 /// The most the kept glTF files take together.
 const CAP: u64 = 1 << 30;
 
+/// Raised when the page reads solids differently (names, meshing): what was kept before is read
+/// again. 2: parts named by their product, STEP's escapes written out.
+const VERSION: u32 = 2;
+
 fn dir() -> PathBuf {
     paths::local_dir().join("cache").join("solids")
 }
@@ -43,6 +47,7 @@ fn entry(path: &Path) -> Option<PathBuf> {
         .as_nanos();
     let name = path.to_string_lossy();
     let h = fnv(&[
+        &VERSION.to_le_bytes(),
         name.as_bytes(),
         &meta.len().to_le_bytes(),
         &modified.to_le_bytes(),

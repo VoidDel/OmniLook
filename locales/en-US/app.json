@@ -68,7 +68,15 @@
       "front": "Front",
       "top": "Top",
       "right": "Right"
-    }
+    },
+    "partList": "{count, plural, one {# part} other {# parts}}",
+    "partListToggle": "Part list",
+    "showAll": "Show all",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "show": "Show",
+    "hide": "Hide",
+    "unnamed": "Unnamed {n}"
   },
   "native": {
     "solidWorksPart": "SolidWorks part",

@@ -97,6 +97,22 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-model { cursor: default; }
 .look-model:active { cursor: default; }
 .look-cad-tools .btn.text { width: auto; padding: 0 9px; font-size: .8rem; }
+/* A model's part list beside it. */
+.look-model-wrap { display: flex; min-height: 0; min-width: 0; height: 100%; }
+.look-model-wrap > .look-model { flex: 1; min-width: 0; }
+.look-parts { width: 260px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); background: var(--bg); }
+.look-parts header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 12px; border-bottom: 1px solid var(--border-subtle); font-size: .84rem; }
+.look-parts header .btn { height: 26px; padding: 0 8px; font-size: .8rem; }
+.look-parts-rows { flex: 1; overflow: auto; padding: 4px 0; }
+.look-parts .pr { position: absolute; left: 0; right: 0; top: 0; height: 26px; display: flex; align-items: center; gap: 2px; padding-right: 8px; font-size: .84rem; white-space: nowrap; cursor: default; }
+.look-parts .pr:hover { background: var(--bg-hover); }
+.look-parts .pr.sel { background: var(--accent-subtle, var(--bg-hover)); color: var(--accent); }
+.look-parts .pr.off .nm { color: var(--fg-muted); }
+.look-parts .pr .tw, .look-parts .pr .eye { width: 22px; height: 22px; flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--fg-muted); border-radius: 4px; }
+.look-parts .pr .tw .ic, .look-parts .pr .eye .ic { width: 14px; height: 14px; }
+.look-parts .pr button:hover { background: var(--bg-active, var(--bg-hover)); color: var(--fg); }
+.look-parts .pr .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding-left: 2px; }
+.look-parts .pr .ct { color: var(--fg-muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
 /* SolidWorks / Inventor: the picture in the file, and what it is. */
 .look-native { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: var(--bg-subtle, transparent); }
 .look-native img { max-width: 100%; max-height: calc(100% - 40px); object-fit: contain; border-radius: 6px; background: #fff; }

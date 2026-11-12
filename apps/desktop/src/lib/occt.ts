@@ -1,5 +1,15 @@
 // What the Open CASCADE worker (occt.worker.ts) is asked and answers, and the asking.
 
+/** A STEP name with its `\X2\…\X0\` (UTF-16, four hex digits a unit) and `\X\hh` escapes
+ * written out; also when the backslashes have become `_`. */
+export function stepName(s: string): string {
+  return s
+    .replace(/[\\_]X2[\\_]((?:[0-9A-Fa-f]{4})+)[\\_]X0[\\_]/g, (_, hex: string) =>
+      String.fromCharCode(...(hex.match(/.{4}/g) ?? []).map((h) => parseInt(h, 16))),
+    )
+    .replace(/\\X\\([0-9A-Fa-f]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)));
+}
+
 export type OcctFormat = 'step' | 'brep';
 
 export interface OcctRequest {

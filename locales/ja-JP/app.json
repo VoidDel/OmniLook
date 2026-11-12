@@ -68,7 +68,15 @@
       "front": "正面",
       "top": "平面",
       "right": "右"
-    }
+    },
+    "partList": "{count, plural, other {部品（# 個）}}",
+    "partListToggle": "部品リスト",
+    "showAll": "すべて表示",
+    "expand": "展開",
+    "collapse": "折りたたむ",
+    "show": "表示",
+    "hide": "非表示",
+    "unnamed": "名前なし {n}"
   },
   "native": {
     "solidWorksPart": "SolidWorks 部品",
