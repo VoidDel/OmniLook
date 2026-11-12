@@ -1212,7 +1212,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3037,7 +3037,7 @@ dependencies = [
 [[package]]
 name = "omnizip-core"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "bitflags 2.13.2",
  "chardetng",
@@ -3061,7 +3061,7 @@ dependencies = [
 [[package]]
 name = "omnizip-engine-7z"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "omnizip-core",
  "sevenz-rust2",
@@ -3071,7 +3071,7 @@ dependencies = [
 [[package]]
 name = "omnizip-engine-rar"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "omnizip-core",
  "tracing",
@@ -3081,7 +3081,7 @@ dependencies = [
 [[package]]
 name = "omnizip-engine-readonly"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "crc32fast",
  "delharc",
@@ -3096,7 +3096,7 @@ dependencies = [
 [[package]]
 name = "omnizip-engine-tar"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "brotli",
  "bzip2",
@@ -3112,7 +3112,7 @@ dependencies = [
 [[package]]
 name = "omnizip-engine-zip"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "omnizip-core",
  "tempfile",
@@ -3123,7 +3123,7 @@ dependencies = [
 [[package]]
 name = "omnizip-formats"
 version = "0.1.0"
-source = "git+https://github.com/VoidDel/OmniZip?rev=017ca0d287f54047a84d657f5ba3ee2827ab10f8#017ca0d287f54047a84d657f5ba3ee2827ab10f8"
+source = "git+https://github.com/VoidDel/OmniZip?rev=bbb9957ac5cc18ce4b62574a0400de5440f34003#bbb9957ac5cc18ce4b62574a0400de5440f34003"
 dependencies = [
  "omnizip-core",
  "omnizip-engine-7z",
@@ -3786,7 +3786,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3842,7 +3842,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4898,10 +4898,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5712,7 +5712,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

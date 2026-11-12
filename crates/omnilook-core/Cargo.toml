@@ -19,7 +19,7 @@ encoding_rs = "0.8.44"
 flate2 = "1.1.11"
 image = { version = "0.25.10", default-features = false, features = ["png", "tiff", "bmp"] }
 lofty = "0.25.5"
-omnizip-formats = { git = "https://github.com/VoidDel/OmniZip", rev = "017ca0d287f54047a84d657f5ba3ee2827ab10f8", version = "0.1.0" }
+omnizip-formats = { git = "https://github.com/VoidDel/OmniZip", rev = "bbb9957ac5cc18ce4b62574a0400de5440f34003", version = "0.1.0" }
 pulldown-cmark = { version = "0.13.6", default-features = false, features = ["html"] }
 roxmltree = "0.21"
 serde.workspace = true
