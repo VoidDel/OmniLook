@@ -30,6 +30,7 @@ use omnilook_win::{
 use windows::Win32::{
     Foundation::{HWND, LPARAM, WPARAM},
     System::Threading::GetCurrentThreadId,
+    UI::HiDpi::{DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext},
     UI::WindowsAndMessaging::{
         DispatchMessageW, GetMessageW, IsWindow, MSG, PostQuitMessage, PostThreadMessageW,
         TranslateMessage, WM_APP,
@@ -506,6 +507,13 @@ impl Agent {
 }
 
 pub fn run() -> ExitCode {
+    // The agent has no Tauri window, so nothing makes it DPI aware (Tauri windows do that when
+    // they start): Windows would hand it 96 DPI and stretch its tray icon and menu at 150 % or
+    // 175 %. Per-monitor aware like the windows; refused only if already set.
+    // SAFETY: a plain Win32 call, before any window of this process exists.
+    unsafe {
+        let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    }
     let log = Log::open("agent.log");
     let _com = match Com::init() {
         Ok(c) => c,
