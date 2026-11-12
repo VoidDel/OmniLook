@@ -17,11 +17,14 @@ use std::{
 const SETTLE: Duration = Duration::from_millis(1000);
 /// How long a window must stay in front before the preview closes for it.
 const RECHECK: Duration = Duration::from_millis(300);
+/// How long the followed selection must stay empty before the preview closes: moving from one
+/// file to another can pass through nothing selected.
+const EMPTY_SETTLE: Duration = Duration::from_millis(150);
 
 use omnilook_core::detect;
 use omnilook_win::{
     events::Subscription,
-    explorer::{Com, Focus, View},
+    explorer::{Com, Focus, Snapshot, View},
     foreground::{self, Home},
     hook::{self, HookEvent},
     pipe,
@@ -49,6 +52,8 @@ enum Event {
     Key(HookEvent),
     /// Explorer's selection changed in the view being followed.
     Selection,
+    /// A while after that selection became empty.
+    SelectionEmptyAgain,
     Request(Request, mpsc::Sender<Reply>),
     /// A preview process ended (closed, crashed or stopped).
     ViewExited(u32),
@@ -129,6 +134,11 @@ fn set_hotkey(s: &Settings) {
     });
 }
 
+/// The followed folder has nothing selected, not even an item without a path.
+fn nothing_selected(s: &Snapshot) -> bool {
+    s.selected.is_empty() && s.selected_virtual == 0
+}
+
 /// The file a preview opens on: the focused item when it is selected, else the first selected.
 fn pick(view: &View) -> Option<PathBuf> {
     let s = view.snapshot().ok()?;
@@ -186,6 +196,7 @@ impl Agent {
             }
             Event::Foreground(h) => self.foreground(HWND(h as *mut _)),
             Event::ForegroundAgain => self.foreground_again(),
+            Event::SelectionEmptyAgain => self.selection_empty_again(),
         }
         true
     }
@@ -305,10 +316,29 @@ impl Agent {
             self.close_view();
             return;
         }
+        // Nothing selected any more (a click on an empty spot of the folder): the preview goes,
+        // once that has lasted a moment.
+        if f.view.snapshot().is_ok_and(|s| nothing_selected(&s)) {
+            let wake = self.wake.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(EMPTY_SETTLE);
+                wake.send(Event::SelectionEmptyAgain);
+            });
+            return;
+        }
         if let Some(p) = pick(&f.view)
             && self.view.as_ref().is_some_and(|v| v.want != p)
         {
             self.show(p, None, None);
+        }
+    }
+
+    fn selection_empty_again(&mut self) {
+        let Some(f) = &self.followed else {
+            return;
+        };
+        if self.view.is_some() && f.view.snapshot().is_ok_and(|s| nothing_selected(&s)) {
+            self.close_view();
         }
     }
 
