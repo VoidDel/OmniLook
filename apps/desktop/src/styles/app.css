@@ -37,6 +37,12 @@ body { background: var(--bg-canvas); color: var(--fg-primary); overflow: hidden;
 .look-text { overflow: auto; font: 13px/20px var(--look-mono); padding: 8px 0; outline: 0; user-select: text; }
 .look-text .tl { position: absolute; left: 0; top: 0; height: 20px; white-space: pre; tab-size: 4; padding-right: 16px; }
 .look-text .ln { display: inline-block; text-align: right; color: var(--fg-muted); padding: 0 14px 0 12px; box-sizing: content-box; user-select: none; }
+/* Cells (lib/lines.ts `cells`): CJK and symbols come from a fallback font, whose glyphs are not a
+   whole number of the monospaced face's columns wide (YaHei's are 1.7 of Cascadia's). Each such
+   character gets a box of one or two columns, its glyph centred (a wider one hangs over both
+   sides), so text drawn in columns lines up. */
+:is(.look-text, .look-md pre) :is(.c1, .c2) { display: inline-flex; justify-content: center; width: 1ch; }
+:is(.look-text, .look-md pre) .c2 { width: 2ch; }
 /* Token classes (crates/omnilook-core/src/text.rs `Class`). */
 .tk1 { color: var(--fg-muted); font-style: italic; }
 .tk2 { color: #0A7F3F; }

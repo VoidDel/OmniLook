@@ -35,6 +35,32 @@ export function splitLines(text: string): Lines {
   return { lines, starts, columns };
 }
 
+/** A character that gets a box of its own, `cols` columns wide whatever font draws it. */
+export interface Cell {
+  text: string;
+  cols: 1 | 2;
+}
+
+// The monospaced faces have neither CJK nor most symbols, so these come from a fallback font whose
+// glyphs are not a whole number of columns wide. Group 1: wide characters (as WIDE, plus the
+// ideographs beyond the BMP), two columns. Group 2: arrows, mathematical and technical symbols
+// and geometric shapes, one column. Box drawing is not here: every monospaced face has it.
+const CELL =
+  /([\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6\u{20000}-\u{3FFFD}])|([\u2190-\u23FF\u25A0-\u25FF])/gu;
+
+/** `text` cut at the characters that need a cell: plain runs as strings, the rest one by one. */
+export function cells(text: string): (string | Cell)[] {
+  const out: (string | Cell)[] = [];
+  let at = 0;
+  for (const m of text.matchAll(CELL)) {
+    if (m.index > at) out.push(text.slice(at, m.index));
+    out.push({ text: m[0], cols: m[1] ? 2 : 1 });
+    at = m.index + m[0].length;
+  }
+  if (at < text.length) out.push(text.slice(at));
+  return out;
+}
+
 /** Class ranges by line: line index → [offset in line, length, class] triples. */
 export function spansByLine(spans: number[], starts: number[]): Map<number, number[]> {
   const out = new Map<number, number[]>();

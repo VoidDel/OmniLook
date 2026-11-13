@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { pieces, spansByLine, splitLines } from './lines';
+import { cells, pieces, spansByLine, splitLines } from './lines';
 
 describe('lines', () => {
   it('splits CRLF and LF text and keeps offsets', () => {
@@ -10,6 +10,22 @@ describe('lines', () => {
     expect(l.columns).toBe(3);
     // Wide characters count twice.
     expect(splitLines('中文x').columns).toBe(5);
+  });
+
+  it('gives wide characters and symbols a cell each', () => {
+    expect(cells('plain │─┐')).toEqual(['plain │─┐']);
+    expect(cells('')).toEqual([]);
+    expect(cells('PC 侧（a）→ b')).toEqual([
+      'PC ',
+      { text: '侧', cols: 2 },
+      { text: '（', cols: 2 },
+      'a',
+      { text: '）', cols: 2 },
+      { text: '→', cols: 1 },
+      ' b',
+    ]);
+    // An ideograph beyond the BMP stays whole.
+    expect(cells('𠮷')).toEqual([{ text: '𠮷', cols: 2 }]);
   });
 
   it('maps ranges onto lines and cuts pieces', () => {

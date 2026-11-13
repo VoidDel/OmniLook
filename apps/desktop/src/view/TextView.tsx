@@ -3,15 +3,30 @@
 // (Intel HEX, S-records) are coloured here field by field, with Rust's checks marked.
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, type Shown, type TextPreview } from '../lib/api';
 import { formatSize } from '../lib/format';
-import { pieces, spansByLine, splitLines } from '../lib/lines';
+import { cells, pieces, spansByLine, splitLines } from '../lib/lines';
 import { addressSpan, type BadRecord, formatAddress, recordPieces } from '../lib/records';
 
 const LINE_H = 20;
+
+/** `text` with its wide characters and symbols in cells (`.c1`, `.c2`), so columns line up. */
+function inCells(text: string): ReactNode {
+  const parts = cells(text);
+  if (parts.every((p) => typeof p === 'string')) return text;
+  return parts.map((p, i) =>
+    typeof p === 'string' ? (
+      p
+    ) : (
+      <span key={i} className={`c${p.cols}`}>
+        {p.text}
+      </span>
+    ),
+  );
+}
 
 export function TextView({ shown, onMeta }: { shown: Shown; onMeta: (meta: string) => void }) {
   const { t } = useTranslation();
@@ -99,10 +114,10 @@ export function TextView({ shown, onMeta }: { shown: Shown; onMeta: (meta: strin
               {ps.map((p, i) =>
                 p.cls ? (
                   <span key={i} className={`tk${p.cls}`} title={p.title}>
-                    {p.text}
+                    {inCells(p.text)}
                   </span>
                 ) : (
-                  p.text
+                  <Fragment key={i}>{inCells(p.text)}</Fragment>
                 ),
               )}
             </div>
